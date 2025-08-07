@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "432126526994",
+    "project_id": "repairmate-mvp",
+    "storage_bucket": "repairmate-mvp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:432126526994:android:46855121fb321607443acb",
+        "android_client_info": {
+          "package_name": "com.brainiac.repairmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCu_JNZSXScwFz4IeBl2pDt_Cg7qMslqmQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
