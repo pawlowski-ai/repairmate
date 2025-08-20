@@ -11,5 +11,25 @@
         "*.local"
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "public": "web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      { "source": "/privacy", "destination": "/privacy.html", "type": 301 },
+      { "source": "/terms", "destination": "/terms.html", "type": 301 }
+    ],
+    "headers": [
+      { "source": "/privacy.html", "headers": [ { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" } ] },
+      { "source": "/terms.html", "headers": [ { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" } ] }
+    ],
+    "rewrites": [
+      { "source": "/", "destination": "/index.html" },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
 }
