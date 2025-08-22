@@ -1,8 +1,7 @@
 
 import { parseJsonFromString, SYSTEM_INSTRUCTION_CHAT, SYSTEM_INSTRUCTION_DIAGNOSIS, SYSTEM_INSTRUCTION_STEPS, SYSTEM_INSTRUCTION_VALIDATION } from '@/constants';
 import { ChatMessage, DiagnosisResult, RepairStep } from '@/types';
-
-const FUNCTION_URL = 'https://generatediagnosis-knjglhjsmq-uc.a.run.app';
+import { callGeminiBackend } from '@/services/api';
 
 export const geminiService = {
   validateIsRepairQuery: async (userText: string): Promise<{ isRepairQuery: boolean }> => {
@@ -10,13 +9,7 @@ export const geminiService = {
         return { isRepairQuery: false };
     }
     try {
-        const res = await fetch(FUNCTION_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: userText, systemInstruction: SYSTEM_INSTRUCTION_VALIDATION })
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const data = await callGeminiBackend({ prompt: userText, systemInstruction: SYSTEM_INSTRUCTION_VALIDATION });
         const resultJson = parseJsonFromString<{ is_repair_query: boolean }>(data.result);
         return { isRepairQuery: resultJson?.is_repair_query ?? false };
     } catch (error) {
@@ -34,13 +27,7 @@ export const geminiService = {
     }
 
     try {
-      const res = await fetch(FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userText ?? '', imageBase64, systemInstruction: SYSTEM_INSTRUCTION_DIAGNOSIS })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await callGeminiBackend({ prompt: userText ?? '', imageBase64, systemInstruction: SYSTEM_INSTRUCTION_DIAGNOSIS });
       return { text: String(data.result ?? '').trim() };
     } catch (error) {
       console.error("Error diagnosing issue:", error);
@@ -52,13 +39,7 @@ export const geminiService = {
     diagnosisText: string
   ): Promise<RepairStep[]> => {
     try {
-      const res = await fetch(FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: `Based on the diagnosis: "${diagnosisText}", provide repair steps.`, systemInstruction: SYSTEM_INSTRUCTION_STEPS })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await callGeminiBackend({ prompt: `Based on the diagnosis: "${diagnosisText}", provide repair steps.`, systemInstruction: SYSTEM_INSTRUCTION_STEPS });
       const parsedSteps = parseJsonFromString<RepairStep[]>(data.result);
       if (!parsedSteps || !Array.isArray(parsedSteps) || parsedSteps.some(s => !s.id || !s.title || !s.description)) {
         console.error("Failed to parse repair steps or steps are malformed:", parsedSteps, "Raw text:", data.result);
@@ -79,13 +60,7 @@ export const geminiService = {
     const prompt = `The user is working on the repair step titled "${stepContext.title}" with description "${stepContext.description}". They asked the following question: "${userQuestion}". Please provide a helpful and concise answer.`;
     
     try {
-      const res = await fetch(FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, systemInstruction: SYSTEM_INSTRUCTION_CHAT })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await callGeminiBackend({ prompt, systemInstruction: SYSTEM_INSTRUCTION_CHAT });
       return String(data.result ?? '').trim();
     } catch (error) {
       console.error("Error getting chat response:", error);

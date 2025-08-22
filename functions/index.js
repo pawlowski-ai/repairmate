@@ -1,7 +1,10 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
+const admin = require("firebase-admin");
 const cors = require("cors")({ origin: true });
+
+try { admin.initializeApp(); } catch {}
 
 // Safety settings
 const safetySettings = [
@@ -32,6 +35,20 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
       return res.status(405).send("Only POST requests are accepted");
     }
 
+    // 1) Auth: verify Firebase ID token
+    const authHeader = req.headers.authorization || "";
+    const match = authHeader.match(/^Bearer (.+)$/i);
+    if (!match) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    let uid;
+    try {
+      const decoded = await admin.auth().verifyIdToken(match[1]);
+      uid = decoded.uid;
+    } catch (e) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
     const { prompt, imageBase64, systemInstruction } = req.body || {};
     if (!prompt || typeof prompt !== "string") {
       return res.status(400).send("Missing 'prompt' in request body");
@@ -39,6 +56,36 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
 
     if (!GEMINI_API_KEY.value()) {
       return res.status(500).json({ error: "Missing GEMINI_API_KEY secret" });
+    }
+
+    // 2) Limiter: transactional increment in users/{uid}
+    const db = admin.firestore();
+    try {
+      await db.runTransaction(async (tx) => {
+        const ref = db.collection('users').doc(uid);
+        const snap = await tx.get(ref);
+        const existing = snap.exists ? snap.data() : {};
+        const plan = existing?.plan || 'free';
+        const callsTotal = typeof existing?.callsTotal === 'number' ? existing.callsTotal : 0;
+        if (plan === 'free' && callsTotal >= 3) {
+          const err = new Error('LIMIT_EXCEEDED');
+          err.code = 'LIMIT_EXCEEDED';
+          throw err;
+        }
+        tx.set(ref, {
+          plan,
+          callsTotal: callsTotal + 1,
+          consented: existing?.consented === true || false,
+          createdAt: snap.exists ? (existing.createdAt || admin.firestore.FieldValue.serverTimestamp()) : admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      });
+    } catch (limitErr) {
+      if (limitErr && (limitErr.code === 'LIMIT_EXCEEDED' || String(limitErr.message).includes('LIMIT_EXCEEDED'))) {
+        return res.status(402).json({ error: 'LIMIT_EXCEEDED' });
+      }
+      console.error('Limiter error:', limitErr);
+      return res.status(500).json({ error: 'Limiter error' });
     }
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY.value());
