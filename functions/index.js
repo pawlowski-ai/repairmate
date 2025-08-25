@@ -49,7 +49,22 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    const { prompt, imageBase64, systemInstruction } = req.body || {};
+    const { prompt, imageBase64, systemInstruction, interactionId } = req.body || {};
+
+    const actionType = typeof systemInstruction === 'string'
+      ? (systemInstruction.includes('validation') || systemInstruction.includes('classification')) ? 'validate'
+        : systemInstruction.includes('STEPS') ? 'steps'
+        : systemInstruction.includes('CHAT') ? 'chat'
+        : 'diagnosis'
+      : 'diagnosis';
+
+    // Entry log (without sensitive content)
+    try {
+      console.log(JSON.stringify({
+        at: 'ENTRY', uid, interactionId: interactionId || null, actionType,
+        hasImage: Boolean(imageBase64), promptLen: typeof prompt === 'string' ? prompt.length : 0
+      }));
+    } catch {}
     if (!prompt || typeof prompt !== "string") {
       return res.status(400).send("Missing 'prompt' in request body");
     }
@@ -58,7 +73,7 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
       return res.status(500).json({ error: "Missing GEMINI_API_KEY secret" });
     }
 
-    // 2) Limiter: transactional increment in users/{uid}
+    // 2) Limiter: transactional increment in users/{uid} (liczymy wszystko)
     const db = admin.firestore();
     try {
       await db.runTransaction(async (tx) => {
@@ -67,18 +82,37 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
         const existing = snap.exists ? snap.data() : {};
         const plan = existing?.plan || 'free';
         const callsTotal = typeof existing?.callsTotal === 'number' ? existing.callsTotal : 0;
-        if (plan === 'free' && callsTotal >= 3) {
+        // Idempotencja: jeśli interactionId już widziane, nie zliczaj ponownie
+        const recentIds = Array.isArray(existing?.recentInteractionIds) ? existing.recentInteractionIds : [];
+        const alreadySeen = interactionId && recentIds.includes(interactionId);
+        try {
+          console.log(JSON.stringify({ at: 'TX_READ', uid, interactionId: interactionId || null, actionType, plan, callsTotal, alreadySeen }));
+        } catch {}
+
+        if (plan === 'free' && callsTotal >= 5 && !alreadySeen) {
+          try {
+            console.log(JSON.stringify({ at: 'LIMIT', uid, interactionId: interactionId || null, actionType, callsTotal }));
+          } catch {}
           const err = new Error('LIMIT_EXCEEDED');
           err.code = 'LIMIT_EXCEEDED';
           throw err;
         }
-        tx.set(ref, {
+        const next = {
           plan,
-          callsTotal: callsTotal + 1,
+          callsTotal: alreadySeen ? callsTotal : callsTotal + 1,
           consented: existing?.consented === true || false,
           createdAt: snap.exists ? (existing.createdAt || admin.firestore.FieldValue.serverTimestamp()) : admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
+        };
+        // Aktualizuj listę recentInteractionIds (przycięta do 20 ostatnich)
+        if (interactionId && !alreadySeen) {
+          const updated = recentIds.concat(interactionId);
+          next.recentInteractionIds = updated.slice(-20);
+        }
+        tx.set(ref, next, { merge: true });
+        try {
+          console.log(JSON.stringify({ at: 'TX_WRITE', uid, interactionId: interactionId || null, actionType, callsTotalBefore: callsTotal, callsTotalAfter: next.callsTotal }));
+        } catch {}
       });
     } catch (limitErr) {
       if (limitErr && (limitErr.code === 'LIMIT_EXCEEDED' || String(limitErr.message).includes('LIMIT_EXCEEDED'))) {
@@ -110,6 +144,9 @@ exports.generateDiagnosis = onRequest({ region: "us-central1", invoker: "public"
       const result = await model.generateContent(parts);
       const response = await result.response;
       const text = await response.text();
+      try {
+        console.log(JSON.stringify({ at: 'OK', uid, interactionId: interactionId || null, actionType }));
+      } catch {}
       res.status(200).json({ result: text });
     } catch (err) {
       console.error("AI error:", err);

@@ -54,18 +54,23 @@ export default function WelcomeScreen() {
         alert("RepairMate is a specialist in fixing household and car issues. Please describe a repair problem you're facing.");
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
+      const msg = String(error?.message || '');
+      if (error?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {
+        router.push('/paywall');
+        return;
+      }
+      if (msg.includes('401') || msg.toLowerCase().includes('unauthorized')) {
+        router.replace('/signin');
+        return;
+      }
       console.error("Error validating query:", error);
       alert("Wystąpił błąd podczas komunikacji z AI. Spróbuj ponownie.");
       return;
     }
 
-    if (!decrementFreeMessages()) {
-      setIsLoading(false);
-      alert("You have no free consultations left."); // Replace with navigation to Paywall
-      return;
-    }
+    // Usuwamy lokalny licznik – o limicie decyduje backend (402 → Paywall)
 
     setUserIssueDescription(text.trim());
     router.push('/diagnosis');
@@ -112,11 +117,7 @@ export default function WelcomeScreen() {
           >
             {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Get Diagnosis</Text>}
           </TouchableOpacity>
-          <Text style={styles.footerText}>
-            {freeMessagesRemaining > 0
-              ? `${freeMessagesRemaining} free consultation${freeMessagesRemaining === 1 ? '' : 's'} left.`
-              : "No free consultations left."}
-          </Text>
+          {/* Lokalny licznik usunięty – backend decyduje o limicie */}
         </View>
       </ScrollView>
     </SafeAreaView>

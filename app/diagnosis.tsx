@@ -2,7 +2,7 @@
 import { useApp } from '@/context/AppContext';
 import { geminiService } from '@/services/geminiService';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function DiagnosisScreen() {
@@ -19,12 +19,19 @@ export default function DiagnosisScreen() {
     handleBackNavigation,
   } = useApp();
 
+  // Guard against duplicate diagnosis calls (dev StrictMode, fast refresh, retry)
+  const fetchedKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
     const fetchDiagnosis = async () => {
+      const key = `${userIssueDescription || ''}|${userIssueImageBase64 || ''}`;
       if (!userIssueDescription && !userIssueImageBase64) {
         setError("No issue provided. Please go back and describe your problem.");
         router.back();
         return;
+      }
+      if (fetchedKeyRef.current === key) {
+        return; // already fetched for this input
       }
 
       setIsLoading(true);
@@ -37,10 +44,17 @@ export default function DiagnosisScreen() {
           userIssueImageBase64
         );
         setDiagnosisResult(result);
-      } catch (err) {
+        fetchedKeyRef.current = key;
+      } catch (err: any) {
         console.error(err);
+        const msg = String(err?.message || '');
+        // Jeśli to LIMIT (402), wrapper już przeniósł do /paywall – nie cofaj ekranu
+        if (err?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {
+          setIsLoading(false);
+          return;
+        }
         setError(err instanceof Error ? err.message : "Failed to get diagnosis. Please try again.");
-        router.back(); // Go back on error
+        router.back();
       } finally {
         setIsLoading(false);
       }
@@ -49,7 +63,7 @@ export default function DiagnosisScreen() {
     if (!diagnosisResult) {
       fetchDiagnosis();
     }
-  }, [userIssueDescription, userIssueImageBase64]);
+  }, [userIssueDescription, userIssueImageBase64, diagnosisResult]);
 
   const handleConfirm = () => {
     if (!diagnosisResult) return;
@@ -67,7 +81,7 @@ export default function DiagnosisScreen() {
         {isLoading && (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color="#38bdf8" />
-            <Text style={styles.loadingText}>{useApp().loadingMessage}</Text>
+            <Text style={styles.loadingText}>{/* loading message from context is already set */}</Text>
           </View>
         )}
 

@@ -1,4 +1,5 @@
 
+import { UserMenu } from "@/components/UserMenu";
 import { AppProvider } from "@/context/AppContext";
 import { auth, db } from "@/services/firebase";
 import { Stack, usePathname, useRouter } from "expo-router";
@@ -49,10 +50,10 @@ export default function RootLayout() {
   return (
     <AppProvider>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="diagnosis" options={{ title: "Diagnosis" }} />
-        <Stack.Screen name="steps" options={{ title: "Steps" }} />
-        <Stack.Screen name="settings" options={{ title: "Settings" }} />
+        <Stack.Screen name="index" options={{ headerShown: true, headerRight: () => <UserMenu /> }} />
+        <Stack.Screen name="diagnosis" options={{ title: "Diagnosis", headerRight: () => <UserMenu /> }} />
+        <Stack.Screen name="steps" options={{ title: "Steps", headerRight: () => <UserMenu /> }} />
+        <Stack.Screen name="settings" options={{ title: "Settings", headerRight: () => <UserMenu /> }} />
       </Stack>
     </AppProvider>
   );

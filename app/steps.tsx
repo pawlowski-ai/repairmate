@@ -1,10 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Modal, TextInput, FlatList } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { geminiService } from '@/services/geminiService';
-import { RepairStep, ChatMessage } from '@/types';
+import { ChatMessage, RepairStep } from '@/types';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function StepByStepScreen() {
   const router = useRouter();
@@ -15,6 +15,7 @@ export default function StepByStepScreen() {
     isLoading,
     setIsLoading,
     setLoadingMessage,
+    loadingMessage,
     setError,
     resetAppState,
     addChatMessage,
@@ -27,10 +28,18 @@ export default function StepByStepScreen() {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  // Guard against duplicate fetching for the same diagnosis
+  const fetchedDiagnosisRef = useRef<string | null>(null);
+
   useEffect(() => {
     const fetchSteps = async () => {
-      if (!diagnosisResult) {
+      if (!diagnosisResult || !diagnosisResult.text) {
         router.back();
+        return;
+      }
+
+      // Skip if we've already fetched steps for this exact diagnosis text
+      if (fetchedDiagnosisRef.current === diagnosisResult.text) {
         return;
       }
 
@@ -40,8 +49,16 @@ export default function StepByStepScreen() {
       try {
         const steps = await geminiService.getRepairSteps(diagnosisResult.text);
         setRepairSteps(steps);
-      } catch (err) {
+        fetchedDiagnosisRef.current = diagnosisResult.text;
+      } catch (err: any) {
         console.error(err);
+        const msg = String(err?.message || '');
+        // Jeśli to LIMIT (402), wrapper już nawigował do /paywall – nie cofaj ekranu
+        if (err?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {
+          setIsLoading(false);
+          return;
+        }
+        // Inne błędy – pokaż błąd i wróć
         setError(err instanceof Error ? err.message : "Failed to get repair steps.");
         router.back();
       } finally {
@@ -52,7 +69,7 @@ export default function StepByStepScreen() {
     if (!repairSteps) {
       fetchSteps();
     }
-  }, [diagnosisResult]);
+  }, [diagnosisResult?.text, repairSteps]);
 
   const handleStepSelect = (step: RepairStep) => {
     setSelectedStep(step);
@@ -82,7 +99,8 @@ export default function StepByStepScreen() {
 
   const handleDone = () => {
     resetAppState();
-    router.push('/');
+    // Wróć bezpośrednio do głównego ekranu (formularz z promptem)
+    router.replace('/');
   };
 
   return (
@@ -97,7 +115,7 @@ export default function StepByStepScreen() {
         {isLoading && (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color="#38bdf8" />
-            <Text style={styles.loadingText}>{useApp().loadingMessage}</Text>
+            <Text style={styles.loadingText}>{loadingMessage}</Text>
           </View>
         )}
 
