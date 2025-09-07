@@ -1,6 +1,0 @@
-# Co zauważyłem podczas testów?
-1. Przepływ użytkownika działa bardzo dobrze - dodałbym osobny ekran do zakładania konta (czyli ekran startowy jak teraz -> ekran logowania tak jak teraz -> ale zmienić przysiki na np "pierwsze raz? - zarejestruj się co przenosiłoby do nowego ekranu gdzie ktoiś musiałby potwierdzić hasło itp.)
-2. Dalej paywall otwiera się po 3 krokach (paywall na 4 - czyli dokładny przepły jest taki: użytkownik wpisuje swój problem -> ai waliduje zapytanie -> jeśli ok, na następnym ekranie jest diagnoza problemu [co trzeba naprawić] -> naciskam żeby brzmi ok, przechodzi dalej -> ekran z krokami do naprawy -> all done - przenosi do ekranu głównego -> użytkownik wpisuje swój problem i dopiero powinien jeszcze dostać diagnozę i dopiero przy kliknięciu "show steps" wtedy chyba byłby piąte zapytanie w tym casie i powinno się pokazać paywall (chodzi o konwersje do płacących). Do poprawy
-3. trzeba dodać menu użytkownika (w którymś rogu, które po naciśnięciu by się rozwijało i tam były opcje) - do przemyślenia. 
-
-Trzeba dodać onboarding - jeśli użytkownik wchodzi niezalogowany jest ekran "witaj w repaiermate" z przyciskiem kontynuuj co przenosi do ekranu logowania/rejestracji - jeśli użtkownik się rejestruje jest potwierdzenie zgód + kolejny ekran to onboarding opis na ekranie jak korzystać z aplikacji, do czego służy.

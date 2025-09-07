@@ -16,12 +16,17 @@ export default function RootLayout() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       try {
+        // Splash dla niezalogowanych
         if (!user) {
           setIsLoading(false);
-          const okPaths = ["/welcome", "/signin"]; // nie przekierowujemy jeśli już tam jesteśmy
-          if (!okPaths.includes(pathname)) router.replace("/signin");
+          const isAuthPath = pathname === "/splash" || pathname.includes("signin") || pathname.includes("signup");
+          if (!isAuthPath) {
+            router.replace("/splash");
+            return;
+          }
           return;
         }
+
         const snap = await getDoc(doc(db, 'users', user.uid));
         const consented = snap.exists() && (snap.data() as any)?.consented === true;
         setIsLoading(false);
@@ -29,7 +34,7 @@ export default function RootLayout() {
           router.replace("/consents");
           return;
         }
-        if (consented && pathname === "/signin") {
+        if (consented && (pathname === "/signin" || pathname === "/signup" || pathname === "/splash")) {
           router.replace("/");
         }
       } catch {

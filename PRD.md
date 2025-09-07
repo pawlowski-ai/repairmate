@@ -46,7 +46,7 @@ This PRD outlines the requirements for the MVP version of the app, focusing stri
 - **Sam**: 27-year-old sharing a flat, eager to fix small things independently.
 
 ### 3.3 Role-based access
-- **Registered User**: Must register on first launch (via Google). Gets 3 free AI interactions.
+- **Registered User**: Must register on first launch (via Google). Gets 5 free AI interactions.
 - **Pro User**: Paid subscription ($15/month) for unlimited AI access.
 
 ## 4. Functional requirements
