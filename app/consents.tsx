@@ -1,18 +1,23 @@
 import { PRIVACY_URL, TERMS_URL } from '@/constants/legal';
 import { auth, db } from '@/services/firebase';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import React, { useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Linking, Pressable, SafeAreaView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 export default function ConsentsScreen() {
   const router = useRouter();
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptUpdates, setAcceptUpdates] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { width } = useWindowDimensions();
 
-  const canContinue = acceptTerms && acceptPrivacy && !isSaving;
+  const allChecked = useMemo(() => acceptPrivacy && acceptTerms && acceptUpdates, [acceptPrivacy, acceptTerms, acceptUpdates]);
+  const canContinue = acceptPrivacy && acceptTerms && !isSaving;
 
   const handleContinue = async () => {
     setError(null);
@@ -21,7 +26,8 @@ export default function ConsentsScreen() {
     setIsSaving(true);
     try {
       await setDoc(doc(db, 'users', current.uid), { consented: true, updatedAt: serverTimestamp() }, { merge: true });
-      router.replace('/');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      router.replace('/onboarding/1' as any);
     } catch (e: any) {
       setError(e?.message ?? 'Nie udało się zapisać zgody.');
     } finally {
@@ -29,53 +35,87 @@ export default function ConsentsScreen() {
     }
   };
 
+  const acceptAll = () => {
+    if (!allChecked) {
+      setAcceptPrivacy(true);
+      setAcceptTerms(true);
+      setAcceptUpdates(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       <View style={styles.container}>
-        <Text accessibilityRole="header" style={styles.title}>Consents</Text>
+        <View style={styles.heroContainer}>
+          <Image
+            source={require('../graph.assets/Privacy.asset.png')}
+            resizeMode="contain"
+            style={[styles.hero, { width: '100%', height: Math.min(420, Math.round(width * 0.75)) }]}
+          />
+        </View>
 
-        <View style={styles.card}>
-          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: acceptTerms }} onPress={() => setAcceptTerms(v => !v)} style={({ pressed }) => [styles.checkboxRow, pressed && styles.pressed]}>
-            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]} />
-            <Text style={styles.checkboxLabel}>I accept the Terms of Use</Text>
-          </Pressable>
-          <Pressable onPress={() => Linking.openURL(TERMS_URL)}>
-            <Text style={styles.link}>Read Terms</Text>
-          </Pressable>
+        <Text accessibilityRole="header" style={styles.title}>BEFORE WE START</Text>
+        <Text style={styles.lead}>We need your consent to continue. Please review and accept.</Text>
 
+        <View style={styles.list}>
           <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: acceptPrivacy }} onPress={() => setAcceptPrivacy(v => !v)} style={({ pressed }) => [styles.checkboxRow, pressed && styles.pressed]}>
             <View style={[styles.checkbox, acceptPrivacy && styles.checkboxChecked]} />
-            <Text style={styles.checkboxLabel}>I accept the Privacy Policy</Text>
+            <Text style={styles.checkboxLabel}>
+              I accept the <Text style={styles.link} onPress={() => Linking.openURL(PRIVACY_URL)}>Privacy Policy</Text>.
+            </Text>
           </Pressable>
-          <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}>
-            <Text style={styles.link}>Read Privacy Policy</Text>
+
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: acceptTerms }} onPress={() => setAcceptTerms(v => !v)} style={({ pressed }) => [styles.checkboxRow, pressed && styles.pressed]}>
+            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]} />
+            <Text style={styles.checkboxLabel}>
+              I accept the <Text style={styles.link} onPress={() => Linking.openURL(TERMS_URL)}>Terms of Use</Text>.
+            </Text>
+          </Pressable>
+
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: acceptUpdates }} onPress={() => setAcceptUpdates(v => !v)} style={({ pressed }) => [styles.checkboxRow, pressed && styles.pressed]}>
+            <View style={[styles.checkbox, acceptUpdates && styles.checkboxChecked]} />
+            <Text style={styles.checkboxLabel}>I agree to receive product tips and updates.</Text>
           </Pressable>
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Pressable accessibilityRole="button" disabled={!canContinue} onPress={handleContinue} style={({ pressed }) => [styles.button, (!canContinue && styles.buttonDisabled) || (pressed && styles.pressed)]}>
-          {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue</Text>}
-        </Pressable>
+        <View style={styles.footer}>
+          <Pressable accessibilityRole="button" onPress={acceptAll} style={({ pressed }) => [styles.acceptAll, pressed && styles.pressed]}>
+            <Text style={styles.acceptAllLabel}>Accept all</Text>
+          </Pressable>
+
+          <Pressable accessibilityRole="button" disabled={!canContinue} onPress={handleContinue} style={({ pressed }) => [styles.button, (!canContinue && styles.buttonDisabled) || (pressed && styles.pressed)]}>
+            {isSaving ? <ActivityIndicator color="#0B0B0B" /> : <Text style={styles.buttonText}>Next</Text>}
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0f172a' },
-  container: { flex: 1, padding: 24, gap: 16, backgroundColor: '#0f172a' },
-  title: { fontSize: 28, fontWeight: '800', color: '#38bdf8', textAlign: 'center' },
-  card: { backgroundColor: '#1e293b', borderRadius: 10, padding: 16, gap: 12, borderWidth: 1, borderColor: '#334155' },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#94a3b8', backgroundColor: 'transparent' },
-  checkboxChecked: { backgroundColor: '#0ea5e9', borderColor: '#0ea5e9' },
-  checkboxLabel: { color: '#e2e8f0', fontSize: 16 },
+  safeArea: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 16, backgroundColor: '#000000' },
+  heroContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 8, paddingBottom: 16 },
+  hero: { width: '100%', height: 280 },
+  title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', letterSpacing: 0.2 },
+  lead: { marginTop: 8, color: '#B9B9B9', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  list: { marginTop: 16, gap: 16 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#2A2A2A', backgroundColor: 'transparent' },
+  checkboxChecked: { backgroundColor: '#27D969', borderColor: '#27D969' },
+  checkboxLabel: { color: '#FFFFFF', fontSize: 16, flex: 1 },
   link: { color: '#93c5fd', textDecorationLine: 'underline' },
-  error: { color: '#f87171', textAlign: 'center' },
-  button: { backgroundColor: '#0ea5e9', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  buttonDisabled: { backgroundColor: '#334155' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  error: { color: '#F87171', textAlign: 'center', marginTop: 8 },
+  footer: { marginTop: 24 },
+  acceptAll: { alignItems: 'center', paddingVertical: 8 },
+  acceptAllLabel: { color: '#FFFFFF', fontSize: 14 },
+  button: { marginTop: 16, height: 56, backgroundColor: '#27D969', borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  buttonDisabled: { backgroundColor: '#2A2A2A' },
+  buttonText: { color: '#0B0B0B', fontSize: 18, lineHeight: 22, fontWeight: '600', textAlign: 'center', width: '100%' },
   pressed: { opacity: 0.9 },
 });
 
