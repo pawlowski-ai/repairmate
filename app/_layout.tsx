@@ -60,6 +60,8 @@ export default function RootLayout() {
         <Stack.Screen name="steps" options={{ title: "Steps", headerRight: () => <UserMenu /> }} />
         <Stack.Screen name="settings" options={{ title: "Settings", headerRight: () => <UserMenu /> }} />
         <Stack.Screen name="onboarding/1" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/2" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/3" options={{ headerShown: false }} />
       </Stack>
     </AppProvider>
   );
