@@ -1,12 +1,22 @@
+import { useApp } from '@/context/AppContext';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Easing, Keyboard, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { setUserIssueDescription } = useApp();
   const inputRef = useRef<TextInput>(null);
   const [value, setValue] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fade = useRef(new Animated.Value(1)).current;
+  const insets = useSafeAreaInsets();
+  const [isFocused, setIsFocused] = useState(false);
+  const baseBottom = Math.max(16, insets.bottom);
+  const bottomOffset = useRef(new Animated.Value(baseBottom)).current;
+  const ctaHeight = useRef(new Animated.Value(56)).current;
 
   const placeholders = [
     'Describe your issue…',
@@ -29,6 +39,31 @@ export default function HomeScreen() {
     inputRef.current?.focus();
   };
 
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent as any, (e: any) => {
+      const kb = e?.endCoordinates?.height || 0;
+      const extra = Platform.OS === 'android' ? 36 : 16; // większy zapas, by nie przycinało CTA
+      Animated.parallel([
+        Animated.timing(bottomOffset, { toValue: kb + extra, duration: Platform.OS === 'ios' ? (e?.duration || 250) : 0, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+        Animated.timing(ctaHeight, { toValue: 48, duration: Platform.OS === 'ios' ? (e?.duration || 250) : 150, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+      ]).start();
+    });
+    const hideSub = Keyboard.addListener(hideEvent as any, (e: any) => {
+      Animated.parallel([
+        Animated.timing(bottomOffset, { toValue: baseBottom, duration: Platform.OS === 'ios' ? (e?.duration || 200) : 0, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+        Animated.timing(ctaHeight, { toValue: 56, duration: Platform.OS === 'ios' ? (e?.duration || 200) : 150, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+      ]).start();
+    });
+    return () => {
+      // @ts-ignore
+      showSub.remove();
+      // @ts-ignore
+      hideSub.remove();
+    };
+  }, [baseBottom, bottomOffset]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -50,6 +85,8 @@ export default function HomeScreen() {
                 autoCorrect
                 keyboardAppearance={Platform.OS === 'ios' ? 'dark' : undefined}
                 returnKeyType="send"
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(value.length > 0)}
               />
               {value.length === 0 && (
                 <Animated.Text pointerEvents="none" style={[styles.placeholder, { opacity: fade }]}>
@@ -60,6 +97,33 @@ export default function HomeScreen() {
           </TouchableWithoutFeedback>
         </View>
         <View style={styles.bottomZone} />
+        <Animated.View style={[styles.ctaContainer, { bottom: bottomOffset }]}>
+          <TouchableOpacity
+            disabled={!(isFocused || value.length > 0)}
+            activeOpacity={0.9}
+            style={[
+              styles.cta,
+              !(isFocused || value.length > 0) ? styles.ctaDisabled : styles.ctaEnabled,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Start repair"
+            onPress={() => {
+              const trimmed = value.trim();
+              if (!trimmed) return;
+              setUserIssueDescription(trimmed);
+              router.push('/diagnosis');
+            }}
+          >
+            <Text
+              style={[
+                styles.ctaText,
+                !(isFocused || value.length > 0) ? styles.ctaTextDisabled : styles.ctaTextEnabled,
+              ]}
+            >
+              Start repair
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -93,5 +157,33 @@ const styles = StyleSheet.create({
     right: 16,
     color: '#7A7A7A',
     fontSize: 16,
+  },
+  ctaContainer: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 0,
+  },
+  cta: {
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaDisabled: {
+    backgroundColor: '#1E1E1E',
+  },
+  ctaEnabled: {
+    backgroundColor: '#27D969',
+  },
+  ctaText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  ctaTextDisabled: {
+    color: '#7A7A7A',
+  },
+  ctaTextEnabled: {
+    color: '#0B0B0B',
   },
 });
