@@ -62,6 +62,8 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding/1" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding/2" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding/3" options={{ headerShown: false }} />
+        <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
+        <Stack.Screen name="terms" options={{ title: 'Terms of Use' }} />
       </Stack>
     </AppProvider>
   );

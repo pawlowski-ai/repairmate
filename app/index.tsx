@@ -1,8 +1,9 @@
+import { SideDrawer } from '@/components/SideDrawer';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Keyboard, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Easing, Keyboard, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const baseBottom = Math.max(16, insets.bottom);
   const bottomOffset = useRef(new Animated.Value(baseBottom)).current;
   const ctaHeight = useRef(new Animated.Value(56)).current;
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const placeholders = [
     'Describe your issue…',
@@ -68,6 +70,14 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
       <View style={styles.wrapper}>
+        {/* Hamburger */}
+        <View style={styles.hamburgerWrap}>
+          <Pressable onPress={() => setDrawerOpen(true)} accessibilityRole="button" accessibilityLabel="Open menu" style={({ pressed }) => [styles.hamburger, pressed && { opacity: 0.8 }]}>
+            <View style={styles.hLine} />
+            <View style={styles.hLine} />
+            <View style={styles.hLine} />
+          </Pressable>
+        </View>
         <View style={styles.topZone}>
           <Text style={styles.headerText}>Tell me what’s broken - I’ll guide you step by step.</Text>
         </View>
@@ -124,6 +134,9 @@ export default function HomeScreen() {
             </Text>
           </TouchableOpacity>
         </Animated.View>
+        <View pointerEvents="box-none" style={styles.drawerOverlay}>
+          <SideDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} plan={'Free'} />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -136,6 +149,10 @@ const styles = StyleSheet.create({
   centerZone: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
   bottomZone: { flex: 1 },
   headerText: { color: '#FFFFFF', fontSize: 28, lineHeight: 34, fontWeight: '800', letterSpacing: 0.2, textAlign: 'center' },
+  hamburgerWrap: { position: 'absolute', top: 84, left: 12, zIndex: 10 },
+  hamburger: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
+  hLine: { width: 18, height: 2, backgroundColor: '#FFFFFF', marginVertical: 2, borderRadius: 1 },
+  drawerOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 20 },
   inputContainer: {
     width: '100%',
     maxWidth: 560,
