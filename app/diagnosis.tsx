@@ -1,9 +1,12 @@
 
+import TetrisLoader from '@/components/TetrisLoader';
 import { useApp } from '@/context/AppContext';
 import { geminiService } from '@/services/geminiService';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function DiagnosisScreen() {
   const router = useRouter();
@@ -70,24 +73,44 @@ export default function DiagnosisScreen() {
     router.push('/steps');
   };
 
+  const requestAlternative = async () => {
+    if (!userIssueDescription && !userIssueImageBase64) return;
+    setIsLoading(true);
+    setLoadingMessage("Finding another possible cause...");
+    try {
+      const alt = await geminiService.diagnoseAlternativeIssue(
+        userIssueDescription,
+        userIssueImageBase64,
+        diagnosisResult?.text
+      );
+      setDiagnosisResult(alt);
+      // Keep fetchedKeyRef the same so further back/forward won't auto-refetch
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    } catch (err: any) {
+      const msg = String(err?.message || '');
+      if (err?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {
+        setIsLoading(false);
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'Failed to get another diagnosis.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>&larr; Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>AI Diagnosis</Text>
-
         {isLoading && (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#38bdf8" />
-            <Text style={styles.loadingText}>{/* loading message from context is already set */}</Text>
+            <TetrisLoader size="md" speed="normal" showLoadingText loadingText="Diagnosing your problem..." />
           </View>
         )}
 
         {diagnosisResult && (
-          <View>
-            <Text style={styles.subtitle}>Here's what I think is wrong:</Text>
+          <View style={{ gap: 12 }}>
+            <Text style={styles.leadStrong}>Here’s what I think is wrong:</Text>
             <View style={styles.card}>
               <Text style={styles.cardText}>{diagnosisResult.text}</Text>
             </View>
@@ -96,9 +119,13 @@ export default function DiagnosisScreen() {
 
         {diagnosisResult && (
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-              <Text style={styles.buttonText}>That Sounds Right, Show Steps</Text>
+            <TouchableOpacity style={styles.primaryCta} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); handleConfirm(); }} accessibilityRole="button">
+              <Text style={styles.primaryCtaText}>Continue</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostCta} onPress={requestAlternative} accessibilityRole="button">
+              <Text style={styles.ghostCtaText}>Not it — show another diagnosis</Text>
+            </TouchableOpacity>
+            <View style={{ height: 8 }} />
           </View>
         )}
       </ScrollView>
@@ -107,7 +134,7 @@ export default function DiagnosisScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#1e293b' },
+  safeArea: { flex: 1, backgroundColor: '#000000' },
   container: {
     flexGrow: 1,
     padding: 24,
@@ -117,51 +144,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    marginBottom: 16,
-  },
-  backButtonText: {
-    color: '#94a3b8',
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#38bdf8',
-    marginBottom: 24,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#cbd5e1',
-    marginBottom: 12,
-  },
+  leadStrong: { color: '#FFFFFF', fontSize: 18, lineHeight: 24, fontWeight: '800', textAlign: 'center' },
   card: {
-    backgroundColor: '#334155',
-    borderRadius: 8,
+    backgroundColor: '#0B0B0B',
+    borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
   },
   cardText: {
-    color: '#f1f5f9',
+    color: '#FFFFFF',
     fontSize: 16,
+    lineHeight: 24,
   },
   loadingText: {
     marginTop: 16,
-    color: '#cbd5e1',
+    color: '#B9B9B9',
     fontSize: 16,
   },
   footer: {
-    marginTop: 'auto',
-    paddingTop: 24,
+    marginTop: 24,
+    paddingTop: 8,
   },
-  button: {
-    backgroundColor: '#0ea5e9',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  primaryCta: { marginTop: 12, height: 56, backgroundColor: '#27D969', borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  primaryCtaText: { color: '#0B0B0B', fontSize: 18, lineHeight: 22, fontWeight: '600', textAlign: 'center', width: '100%' },
+  ghostCta: { marginTop: 10, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#1E1E1E', backgroundColor: '#0B0B0B' },
+  ghostCtaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });

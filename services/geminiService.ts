@@ -48,6 +48,35 @@ export const geminiService = {
     }
   },
 
+  // Request an alternative diagnosis explicitly different from a previous suggestion
+  diagnoseAlternativeIssue: async (
+    userText: string | null,
+    imageBase64: string | null,
+    previousDiagnosisText?: string,
+    opts?: CallOptions
+  ): Promise<DiagnosisResult> => {
+    if (!userText && !imageBase64) {
+      throw new Error("No input provided for diagnosis.");
+    }
+
+    try {
+      const interactionId = opts?.interactionId ?? `${Date.now()}-diagnosis-alt-${Math.random().toString(36).slice(2)}`;
+      const altHint = previousDiagnosisText
+        ? `\n\nIMPORTANT: Provide a different plausible alternative diagnosis than: "${previousDiagnosisText}". Do not repeat that cause.`
+        : `\n\nIMPORTANT: Provide a different plausible alternative diagnosis than your first guess.`;
+      const data = await callGeminiBackend({
+        prompt: `${userText ?? ''}${altHint}`,
+        imageBase64,
+        systemInstruction: SYSTEM_INSTRUCTION_DIAGNOSIS,
+        interactionId,
+      });
+      return { text: String(data.result ?? '').trim() };
+    } catch (error) {
+      console.error("Error getting alternative diagnosis:", error);
+      throw error;
+    }
+  },
+
   getRepairSteps: async (
     diagnosisText: string,
     opts?: CallOptions
