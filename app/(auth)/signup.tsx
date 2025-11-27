@@ -23,9 +23,8 @@ export default function SignUpScreen() {
       createdAt: snap.exists() ? existing.createdAt ?? now : now,
       updatedAt: now,
     }, { merge: true });
-    const consented = existing?.consented === true;
-    router.replace(consented ? '/' : '/consents');
-  }, [db, router]);
+    // Navigation is handled by RootLayout to prevent double redirects
+  }, [db]);
 
   const handleSignUp = async (email: string, password: string) => {
     setError(null);
@@ -40,7 +39,6 @@ export default function SignUpScreen() {
       const code = e?.code as string | undefined;
       const message = code === 'auth/email-already-in-use' ? 'Email already in use' : 'Failed to create account';
       setError(message);
-    } finally {
       setIsLoading(false);
     }
   };

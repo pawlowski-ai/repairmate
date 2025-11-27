@@ -25,9 +25,8 @@ export default function SignInScreen() {
       updatedAt: now,
     }, { merge: true });
 
-    const consented = existing?.consented === true;
-    router.replace(consented ? '/' : '/consents');
-  }, [db, router]);
+    // Navigation is handled by RootLayout to prevent double redirects
+  }, [db]);
 
   const validate = (email: string, password: string): string | null => {
     if (!email.trim() || !password) return 'Email and password are required';
@@ -52,7 +51,6 @@ export default function SignInScreen() {
         : code === 'auth/wrong-password' ? 'Wrong password'
         : 'Failed to sign in';
       setError(message);
-    } finally {
       setIsLoading(false);
     }
   };

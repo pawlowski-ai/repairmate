@@ -71,7 +71,7 @@ export function OnboardScreen(props: Props) {
 
         <View style={[styles.textBlock, { width: containerWidth, marginTop: textBlockMarginTop }]}> 
           <Text accessibilityRole="header" style={[styles.title, { fontSize: titleSize, lineHeight: titleLH }]} numberOfLines={2}>{title}</Text>
-          <Text style={[styles.subtitle, { fontSize: subtitleSize, lineHeight: subtitleLH }]} numberOfLines={3}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { fontSize: subtitleSize, lineHeight: subtitleLH }]} numberOfLines={5}>{subtitle}</Text>
         </View>
 
         <View style={{ flex: 1 }} />

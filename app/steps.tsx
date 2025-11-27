@@ -1,10 +1,19 @@
 
+import TetrisLoader from '@/components/TetrisLoader';
 import { useApp } from '@/context/AppContext';
 import { geminiService } from '@/services/geminiService';
 import { ChatMessage, RepairStep } from '@/types';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ITEM_WIDTH = Math.round(SCREEN_WIDTH * 0.85); // Use integer width for better snapping
+const SPACING = Math.round((SCREEN_WIDTH - ITEM_WIDTH) / 2);
 
 export default function StepByStepScreen() {
   const router = useRouter();
@@ -27,9 +36,11 @@ export default function StepByStepScreen() {
   const [selectedStep, setSelectedStep] = useState<RepairStep | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
 
   // Guard against duplicate fetching for the same diagnosis
   const fetchedDiagnosisRef = useRef<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchSteps = async () => {
@@ -72,6 +83,7 @@ export default function StepByStepScreen() {
   }, [diagnosisResult?.text, repairSteps]);
 
   const handleStepSelect = (step: RepairStep) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setSelectedStep(step);
     setChatMessages([]); // Clear previous chat
     setChatVisible(true);
@@ -98,41 +110,93 @@ export default function StepByStepScreen() {
   };
 
   const handleDone = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     resetAppState();
     // Wróć bezpośrednio do głównego ekranu (formularz z promptem)
     router.replace('/');
   };
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList<RepairStep> | null>(null);
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems && viewableItems.length > 0 && typeof viewableItems[0].index === 'number') {
+      setCurrentIndex(viewableItems[0].index);
+    }
+  }).current;
+  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 }).current;
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>&larr; Back to Diagnosis</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Fix It Step By Step</Text>
-        {diagnosisResult && <Text style={styles.subtitle}>For: {diagnosisResult.text.substring(0, 100)}...</Text>}
+      <StatusBar style="light" />
+      <View style={[styles.container, { paddingBottom: insets.bottom + 20 }]}>
+        <Text style={styles.title}>Steps to fix it</Text>
+        {/* Subtitle removed */}
 
         {isLoading && (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#38bdf8" />
-            <Text style={styles.loadingText}>{loadingMessage}</Text>
+            <TetrisLoader size="md" speed="normal" showLoadingText loadingText={loadingMessage || 'Generating repair steps...'} />
           </View>
         )}
 
         {repairSteps && (
-          <View style={styles.stepsContainer}>
-            {repairSteps.map((step, index) => (
-              <TouchableOpacity key={step.id} style={styles.card} onPress={() => handleStepSelect(step)}>
-                <Text style={styles.cardTitle}>Step {index + 1}: {step.title}</Text>
-                <Text style={styles.cardText}>{step.description}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+          <>
+            <FlatList
+              ref={flatListRef}
+              data={repairSteps}
+              keyExtractor={(item) => item.id}
+              horizontal
+              snapToInterval={ITEM_WIDTH}
+              snapToAlignment="start"
+              decelerationRate="fast"
+              ListHeaderComponent={<View style={{ width: SPACING }} />}
+              ListFooterComponent={<View style={{ width: SPACING }} />}
+              showsHorizontalScrollIndicator={false}
+              onScrollBeginDrag={() => setShowSwipeHint(false)}
+              onViewableItemsChanged={onViewableItemsChanged}
+              viewabilityConfig={viewabilityConfig}
+              renderItem={({ item, index }) => (
+                <View style={[styles.page, { width: ITEM_WIDTH }]}> 
+                  <View style={styles.pageContent}>
+                    <View style={styles.card}>
+                      <View style={styles.cardHeader}>
+                        <View style={styles.stepBadge}>
+                          <Text style={styles.stepBadgeText}>{index + 1}</Text>
+                        </View>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                      </View>
+                      <Text style={styles.cardText}>{item.description}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.ghostButton}
+                      onPress={() => handleStepSelect(item)}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.ghostButtonText}>Ask about this step</Text>
+                    </TouchableOpacity>
+                    {index === repairSteps.length - 1 && (
+                      <TouchableOpacity style={styles.button} onPress={handleDone} accessibilityRole="button">
+                        <Text style={styles.buttonText}>All Done!</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              )}
+            />
 
-        <TouchableOpacity style={styles.button} onPress={handleDone}>
-          <Text style={styles.buttonText}>All Done!</Text>
-        </TouchableOpacity>
+            {showSwipeHint && (
+              <View style={styles.swipeHint}>
+                <Ionicons name="hand-left-outline" size={20} color="#B9B9B9" />
+                <Text style={styles.swipeHintText}>Swipe for next step</Text>
+              </View>
+            )}
+
+            <View style={styles.indicatorContainer}>
+              {repairSteps.map((_, i) => (
+                <View key={i} style={[styles.indicatorDot, i === currentIndex && styles.indicatorDotActive]} />
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Chat Modal */}
         <Modal
@@ -160,7 +224,7 @@ export default function StepByStepScreen() {
                   value={chatInput}
                   onChangeText={setChatInput}
                   placeholder="Ask a follow-up question..."
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#B9B9B9"
                 />
                 <TouchableOpacity style={styles.sendButton} onPress={handleSendChat} disabled={isSending}>
                   {isSending ? <ActivityIndicator color="#fff"/> : <Text style={styles.sendButtonText}>Send</Text>}
@@ -172,17 +236,16 @@ export default function StepByStepScreen() {
             </View>
           </View>
         </Modal>
-
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#1e293b' },
+  safeArea: { flex: 1, backgroundColor: '#000000' },
   container: {
-    flexGrow: 1,
-    padding: 24,
+    flex: 1,
+    paddingTop: 24,
   },
   centered: {
     flex: 1,
@@ -190,58 +253,136 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 48,
   },
-  backButton: {
-    marginBottom: 16,
-  },
-  backButtonText: {
-    color: '#94a3b8',
-    fontSize: 16,
-  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#38bdf8',
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+    color: '#FFFFFF',
+    marginBottom: 32,
+    paddingHorizontal: 24,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#cbd5e1',
-    marginBottom: 24,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#B9B9B9',
+    marginTop: 8,
+    marginBottom: 16,
   },
   stepsContainer: {
     marginBottom: 24,
   },
+  page: {
+    paddingHorizontal: 6, // Mały odstęp między kartami
+  },
+  pageContent: {
+    flex: 1,
+  },
   card: {
-    backgroundColor: '#334155',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#111111',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#1F1F1F',
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    gap: 12,
+  },
+  stepBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#27D969',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  stepBadgeText: {
+    color: '#0B0B0B',
+    fontWeight: '800',
+    fontSize: 16,
   },
   cardTitle: {
+    flex: 1,
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#38bdf8',
-    marginBottom: 4,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 24,
   },
   cardText: {
-    color: '#f1f5f9',
+    color: '#CFCFCF',
     fontSize: 16,
+    lineHeight: 24,
+  },
+  swipeHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  swipeHintText: {
+    color: '#B9B9B9',
+    fontSize: 14,
   },
   loadingText: {
     marginTop: 16,
-    color: '#cbd5e1',
+    color: '#B9B9B9',
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#0ea5e9',
+    height: 56,
+    backgroundColor: '#27D969',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 28,
     alignItems: 'center',
     marginTop: 16,
   },
   buttonText: {
-    color: '#fff',
+    color: '#0B0B0B',
     fontSize: 18,
+    lineHeight: 22,
     fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
+  },
+  ghostButton: {
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
+    borderRadius: 28,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  ghostButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    gap: 6,
+    marginTop: 24,
+  },
+  indicatorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#1E1E1E',
+  },
+  indicatorDotActive: {
+    backgroundColor: '#FFFFFF',
   },
   // Modal Styles
   modalContainer: {
@@ -251,16 +392,16 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    backgroundColor: '#1e293b',
+    backgroundColor: '#0B0B0B',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
     height: '85%',
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#38bdf8',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   chatArea: {
@@ -274,51 +415,61 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   userBubble: {
-    backgroundColor: '#0ea5e9',
+    backgroundColor: '#1E1E1E',
     alignSelf: 'flex-end',
   },
   aiBubble: {
-    backgroundColor: '#334155',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
     alignSelf: 'flex-start',
   },
   chatText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
   },
   chatInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#1E1E1E',
     paddingTop: 12,
   },
   chatInput: {
     flex: 1,
-    backgroundColor: '#334155',
+    backgroundColor: '#0B0B0B',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    color: '#fff',
+    color: '#FFFFFF',
     marginRight: 8,
   },
   sendButton: {
-    backgroundColor: '#0ea5e9',
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
+    backgroundColor: 'transparent',
     borderRadius: 20,
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   sendButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   closeButton: {
-    backgroundColor: '#334155',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 16,
   },
   closeButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

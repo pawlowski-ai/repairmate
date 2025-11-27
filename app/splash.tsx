@@ -14,7 +14,7 @@ export default function SplashScreen() {
     if (isSetting) return;
     setIsSetting(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    router.replace('/signin');
+    router.replace('/signup');
   };
 
   return (

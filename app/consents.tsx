@@ -27,7 +27,7 @@ export default function ConsentsScreen() {
     try {
       await setDoc(doc(db, 'users', current.uid), { consented: true, updatedAt: serverTimestamp() }, { merge: true });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      router.replace('/onboarding/1' as any);
+      router.replace('/onboarding' as any);
     } catch (e: any) {
       setError(e?.message ?? 'Nie udało się zapisać zgody.');
     } finally {

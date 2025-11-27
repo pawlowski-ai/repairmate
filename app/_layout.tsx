@@ -1,4 +1,3 @@
-
 import { UserMenu } from "@/components/UserMenu";
 import { AppProvider } from "@/context/AppContext";
 import { auth, db } from "@/services/firebase";
@@ -54,14 +53,25 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: '#000000' },
+          headerTintColor: '#FFFFFF',
+          headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: '700' },
+          contentStyle: { backgroundColor: '#000000' },
+        }}
+      >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="diagnosis" options={{ title: "Diagnosis", headerRight: () => <UserMenu /> }} />
         <Stack.Screen name="steps" options={{ title: "Steps", headerRight: () => <UserMenu /> }} />
         <Stack.Screen name="settings" options={{ title: "Settings", headerRight: () => <UserMenu /> }} />
-        <Stack.Screen name="onboarding/1" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding/2" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding/3" options={{ headerShown: false }} />
+        <Stack.Screen name="consents" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/signin" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/signup" options={{ headerShown: false }} />
+        <Stack.Screen name="paywall" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
         <Stack.Screen name="terms" options={{ title: 'Terms of Use' }} />
       </Stack>

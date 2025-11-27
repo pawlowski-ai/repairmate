@@ -1,14 +1,16 @@
 import { SideDrawer } from '@/components/SideDrawer';
 import { useApp } from '@/context/AppContext';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Keyboard, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Alert, Animated, Easing, Image, Keyboard, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { setUserIssueDescription } = useApp();
+  const { setUserIssueDescription, setUserIssueImageBase64 } = useApp();
   const inputRef = useRef<TextInput>(null);
   const [value, setValue] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -19,6 +21,8 @@ export default function HomeScreen() {
   const bottomOffset = useRef(new Animated.Value(baseBottom)).current;
   const ctaHeight = useRef(new Animated.Value(56)).current;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const imageBase64Ref = useRef<string | null>(null);
 
   const placeholders = [
     'Describe your issue…',
@@ -66,6 +70,52 @@ export default function HomeScreen() {
     };
   }, [baseBottom, bottomOffset]);
 
+  const handleImagePick = async () => {
+    Alert.alert('Add photo', 'Choose a photo to help diagnose the issue', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Take Photo',
+        onPress: async () => {
+          const perm = await ImagePicker.requestCameraPermissionsAsync();
+          if (perm.status !== 'granted') {
+            Alert.alert('Permission required', 'Camera permission is required to take photos.');
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.5,
+            base64: true,
+          });
+          if (!result.canceled && result.assets[0]) {
+            setSelectedImage(result.assets[0].uri);
+            imageBase64Ref.current = result.assets[0].base64 || null;
+          }
+        },
+      },
+      {
+        text: 'Choose from Library',
+        onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.5,
+            base64: true,
+          });
+          if (!result.canceled && result.assets[0]) {
+            setSelectedImage(result.assets[0].uri);
+            imageBase64Ref.current = result.assets[0].base64 || null;
+          }
+        },
+      },
+    ]);
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    imageBase64Ref.current = null;
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -84,11 +134,19 @@ export default function HomeScreen() {
         <View style={styles.centerZone}>
           <TouchableWithoutFeedback onPress={focusInput}>
             <View style={styles.inputContainer} accessibilityRole="button" accessibilityLabel="Open message input">
+              {selectedImage && (
+                <View style={styles.previewContainer}>
+                  <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+                  <Pressable onPress={clearImage} style={styles.removeImageButton}>
+                    <Ionicons name="close-circle" size={20} color="#F87171" />
+                  </Pressable>
+                </View>
+              )}
               <TextInput
                 ref={inputRef}
                 value={value}
                 onChangeText={setValue}
-                style={styles.input}
+                style={[styles.input, selectedImage ? styles.inputWithImage : null]}
                 placeholder={undefined}
                 placeholderTextColor="#7A7A7A"
                 autoCapitalize="sentences"
@@ -99,35 +157,38 @@ export default function HomeScreen() {
                 onBlur={() => setIsFocused(value.length > 0)}
               />
               {value.length === 0 && (
-                <Animated.Text pointerEvents="none" style={[styles.placeholder, { opacity: fade }]}>
+                <Animated.Text pointerEvents="none" style={[styles.placeholder, { opacity: fade }, selectedImage ? styles.placeholderWithImage : null]}>
                   {placeholders[placeholderIndex]}
                 </Animated.Text>
               )}
+              <Pressable onPress={handleImagePick} style={({ pressed }) => [styles.cameraButton, pressed && { opacity: 0.7 }]}>
+                <Ionicons name="camera-outline" size={24} color="#7A7A7A" />
+              </Pressable>
             </View>
           </TouchableWithoutFeedback>
         </View>
         <View style={styles.bottomZone} />
         <Animated.View style={[styles.ctaContainer, { bottom: bottomOffset }]}>
           <TouchableOpacity
-            disabled={!(isFocused || value.length > 0)}
+            disabled={!(isFocused || value.length > 0 || selectedImage)}
             activeOpacity={0.9}
             style={[
               styles.cta,
-              !(isFocused || value.length > 0) ? styles.ctaDisabled : styles.ctaEnabled,
+              !(isFocused || value.length > 0 || selectedImage) ? styles.ctaDisabled : styles.ctaEnabled,
             ]}
             accessibilityRole="button"
             accessibilityLabel="Start repair"
             onPress={() => {
-              const trimmed = value.trim();
-              if (!trimmed) return;
-              setUserIssueDescription(trimmed);
+              if (!value.trim() && !selectedImage) return;
+              setUserIssueDescription(value.trim() || (selectedImage ? 'Image diagnosis' : ''));
+              setUserIssueImageBase64(imageBase64Ref.current);
               router.push('/diagnosis');
             }}
           >
             <Text
               style={[
                 styles.ctaText,
-                !(isFocused || value.length > 0) ? styles.ctaTextDisabled : styles.ctaTextEnabled,
+                !(isFocused || value.length > 0 || selectedImage) ? styles.ctaTextDisabled : styles.ctaTextEnabled,
               ]}
             >
               Start repair
@@ -161,19 +222,56 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B0B0B',
     borderWidth: 1,
     borderColor: '#1E1E1E',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 12,
+    paddingLeft: 4,
   },
   input: {
-    paddingHorizontal: 16,
+    flex: 1,
+    height: '100%',
+    paddingHorizontal: 12,
     color: '#FFFFFF',
     fontSize: 16,
+  },
+  inputWithImage: {
+    paddingLeft: 8,
   },
   placeholder: {
     position: 'absolute',
     left: 16,
-    right: 16,
+    right: 48,
     color: '#7A7A7A',
     fontSize: 16,
+  },
+  placeholderWithImage: {
+    left: 56,
+  },
+  previewContainer: {
+    width: 40,
+    height: 40,
+    marginLeft: 4,
+    position: 'relative',
+  },
+  previewImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#0B0B0B',
+    borderRadius: 10,
+  },
+  cameraButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ctaContainer: {
     position: 'absolute',

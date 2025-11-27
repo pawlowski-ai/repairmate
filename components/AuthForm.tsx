@@ -1,8 +1,11 @@
+import { auth } from '@/services/firebase';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Google from 'expo-auth-session/build/providers/Google';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 
@@ -22,6 +25,20 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  // TODO: Replace with your actual Web Client ID from Firebase Console -> Authentication -> Google -> Web SDK configuration
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).catch((err) => {
+        console.error('Google Sign-In Error', err);
+      });
+    }
+  }, [response]);
 
   const canSubmit = email.trim().length > 0 && password.length >= 6 && !isSubmitting;
 
@@ -108,10 +125,15 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
         <View style={styles.socialSection}>
           <Text style={styles.socialLabel}>or use instead</Text>
           <View style={styles.socialIconsRow}>
-            <Pressable accessibilityRole="button" onPress={() => {}} style={({ pressed }) => [styles.socialIconWrapper, pressed && styles.pressed]}>
-              <Ionicons name={Platform.OS === 'ios' ? 'logo-apple' : 'logo-apple'} size={24} color="#FFFFFF" />
-            </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => {}} style={({ pressed }) => [styles.socialIconWrapper, pressed && styles.pressed]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                promptAsync();
+              }}
+              disabled={!request}
+              style={({ pressed }) => [styles.socialIconWrapper, pressed && styles.pressed]}
+            >
               <Ionicons name="logo-google" size={24} color="#FFFFFF" />
             </Pressable>
           </View>

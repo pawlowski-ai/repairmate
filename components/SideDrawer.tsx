@@ -1,7 +1,9 @@
 import { auth } from '@/services/firebase';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type Props = {
   isOpen: boolean;
@@ -13,9 +15,11 @@ type Props = {
 export const SideDrawer: React.FC<Props> = ({ isOpen, onClose, drawerWidth, plan = 'Free' }) => {
   const router = useRouter();
   const user = auth.currentUser;
-  // Używamy wartości w pikselach, aby uniknąć częściowej widoczności przed pomiarem
-  const translateX = useRef(new Animated.Value(-10000)).current;
-  const measuredWidthRef = useRef(0);
+
+  // Initial position off-screen
+  const initialWidth = drawerWidth ?? (SCREEN_WIDTH * 0.84);
+  const translateX = useRef(new Animated.Value(-initialWidth)).current;
+  const measuredWidthRef = useRef(initialWidth);
 
   useEffect(() => {
     const toValue = isOpen ? 0 : -measuredWidthRef.current;
@@ -77,8 +81,10 @@ export const SideDrawer: React.FC<Props> = ({ isOpen, onClose, drawerWidth, plan
           onLayout={(e) => {
             const w = drawerWidth ?? e.nativeEvent.layout.width;
             measuredWidthRef.current = w;
-            // Ustaw poprawną pozycję startową natychmiast po pomiarze
-            translateX.setValue(isOpen ? 0 : -w);
+            if (!isOpen) {
+               // Update closed position if layout differs from initial guess
+               translateX.setValue(-w);
+            }
           }}
         >
           {/* Account */}
@@ -135,7 +141,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     bottom: 0,
-    left: 8,
+    left: 0,
     width: '84%',
     backgroundColor: '#0B0B0B', // gray wall over black background
     borderRightWidth: 1,
