@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "repairmate",
+    "name": "MendWise",
     "slug": "mendwise",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,14 +10,15 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.repairmate.app",
+      "bundleIdentifier": "com.brainiac.repairmate",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to take photos of broken items for diagnosis.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photos to select images of broken items for diagnosis."
       }
     },
     "android": {
-      "package": "com.repairmate.app",
+      "package": "com.brainiac.repairmate",
+      "googleServicesFile": "./app/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
