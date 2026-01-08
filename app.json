@@ -20,7 +20,7 @@
       "package": "com.brainiac.repairmate",
       "googleServicesFile": "./app/google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
