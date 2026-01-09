@@ -1,5 +1,4 @@
 // Import the functions you need from the SDKs you need
-import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -17,9 +16,5 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+// Note: Analytics is not supported in React Native - only initialize on web
 export const app = initializeApp(firebaseConfig);
-try {
-  if (typeof window !== 'undefined') {
-    getAnalytics(app);
-  }
-} catch {}

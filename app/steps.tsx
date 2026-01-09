@@ -62,7 +62,9 @@ export default function StepByStepScreen() {
         setRepairSteps(steps);
         fetchedDiagnosisRef.current = diagnosisResult.text;
       } catch (err: any) {
-        console.error(err);
+        if (__DEV__) {
+          console.error(err);
+        }
         const msg = String(err?.message || '');
         // Jeśli to LIMIT (402), wrapper już nawigował do /paywall – nie cofaj ekranu
         if (err?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {

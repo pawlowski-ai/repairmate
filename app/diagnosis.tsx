@@ -49,7 +49,9 @@ export default function DiagnosisScreen() {
         setDiagnosisResult(result);
         fetchedKeyRef.current = key;
       } catch (err: any) {
-        console.error(err);
+        if (__DEV__) {
+          console.error(err);
+        }
         const msg = String(err?.message || '');
         // Jeśli to LIMIT (402), wrapper już przeniósł do /paywall – nie cofaj ekranu
         if (err?.code === 'LIMIT' || msg.includes('402') || msg.includes('LIMIT')) {

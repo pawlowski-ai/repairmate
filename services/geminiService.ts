@@ -24,7 +24,9 @@ export const geminiService = {
         if (msg.includes('401') || msg.toLowerCase().includes('auth')) {
           throw error;
         }
-        console.error("Error validating query:", error);
+        if (__DEV__) {
+          console.error("Error validating query:", error);
+        }
         return { isRepairQuery: false };
     }
   },
@@ -43,7 +45,9 @@ export const geminiService = {
       const data = await callGeminiBackend({ prompt: userText ?? '', imageBase64, systemInstruction: SYSTEM_INSTRUCTION_DIAGNOSIS, interactionId });
       return { text: String(data.result ?? '').trim() };
     } catch (error) {
-      console.error("Error diagnosing issue:", error);
+      if (__DEV__) {
+        console.error("Error diagnosing issue:", error);
+      }
       throw error; // Re-throw to be handled by the caller
     }
   },
@@ -72,7 +76,9 @@ export const geminiService = {
       });
       return { text: String(data.result ?? '').trim() };
     } catch (error) {
-      console.error("Error getting alternative diagnosis:", error);
+      if (__DEV__) {
+        console.error("Error getting alternative diagnosis:", error);
+      }
       throw error;
     }
   },
@@ -86,12 +92,16 @@ export const geminiService = {
       const data = await callGeminiBackend({ prompt: `Based on the diagnosis: "${diagnosisText}", provide repair steps.`, systemInstruction: SYSTEM_INSTRUCTION_STEPS, interactionId });
       const parsedSteps = parseJsonFromString<RepairStep[]>(data.result);
       if (!parsedSteps || !Array.isArray(parsedSteps) || parsedSteps.some(s => !s.id || !s.title || !s.description)) {
-        console.error("Failed to parse repair steps or steps are malformed:", parsedSteps, "Raw text:", data.result);
+        if (__DEV__) {
+          console.error("Failed to parse repair steps or steps are malformed:", parsedSteps, "Raw text:", data.result);
+        }
         return [{id: "fallback", title: "Unable to Generate Steps", description: "I couldn't generate detailed steps right now. Please try rephrasing the issue or consult the diagnosis for general guidance."}];
       }
       return parsedSteps;
     } catch (error) {
-      console.error("Error getting repair steps:", error);
+      if (__DEV__) {
+        console.error("Error getting repair steps:", error);
+      }
       throw error;
     }
   },
@@ -109,7 +119,9 @@ export const geminiService = {
       const data = await callGeminiBackend({ prompt, systemInstruction: SYSTEM_INSTRUCTION_CHAT, interactionId });
       return String(data.result ?? '').trim();
     } catch (error) {
-      console.error("Error getting chat response:", error);
+      if (__DEV__) {
+        console.error("Error getting chat response:", error);
+      }
       throw error;
     }
   },

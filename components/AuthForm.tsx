@@ -1,6 +1,6 @@
 import { auth } from '@/services/firebase';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as Google from 'expo-auth-session/build/providers/Google';
+import * as Google from 'expo-auth-session/providers/google';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -35,7 +35,9 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
       const { id_token } = response.params;
       const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential).catch((err) => {
-        console.error('Google Sign-In Error', err);
+        if (__DEV__) {
+          console.error('Google Sign-In Error', err);
+        }
       });
     }
   }, [response]);

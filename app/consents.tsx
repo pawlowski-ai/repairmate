@@ -15,6 +15,7 @@ export default function ConsentsScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { width } = useWindowDimensions();
+  const imageHeight = Math.min(420, Math.round((width || 375) * 0.75));
 
   const allChecked = useMemo(() => acceptPrivacy && acceptTerms && acceptUpdates, [acceptPrivacy, acceptTerms, acceptUpdates]);
   const canContinue = acceptPrivacy && acceptTerms && !isSaving;
@@ -52,7 +53,7 @@ export default function ConsentsScreen() {
           <Image
             source={require('../graph.assets/Privacy.asset.png')}
             resizeMode="contain"
-            style={[styles.hero, { width: '100%', height: Math.min(420, Math.round(width * 0.75)) }]}
+            style={[styles.hero, { width: '100%', height: imageHeight }]}
           />
         </View>
 

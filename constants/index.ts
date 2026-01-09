@@ -99,7 +99,9 @@ export const parseJsonFromString = <T,>(jsonString: string): T | null => {
     try {
       return JSON.parse(cleanedString) as T;
     } catch (e) {
-      console.error("Failed to parse JSON response:", e, "Original string:", jsonString);
+      if (__DEV__) {
+        console.error("Failed to parse JSON response:", e, "Original string:", jsonString);
+      }
       // Fallback: try to find JSON array within the string if it\'s not perfectly formatted
       const arrayStart = cleanedString.indexOf('[');
       const arrayEnd = cleanedString.lastIndexOf(']');
@@ -107,7 +109,9 @@ export const parseJsonFromString = <T,>(jsonString: string): T | null => {
         try {
           return JSON.parse(cleanedString.substring(arrayStart, arrayEnd + 1)) as T;
         } catch (e2) {
-           console.error("Failed to parse extracted JSON array substring:", e2);
+          if (__DEV__) {
+            console.error("Failed to parse extracted JSON array substring:", e2);
+          }
         }
       }
       // Fallback: try to find JSON object
@@ -119,7 +123,9 @@ export const parseJsonFromString = <T,>(jsonString: string): T | null => {
           // For steps, we expect an array.
           return JSON.parse(cleanedString.substring(objectStart, objectEnd + 1)) as T;
         } catch (e3) {
-           console.error("Failed to parse extracted JSON object substring:", e3);
+          if (__DEV__) {
+            console.error("Failed to parse extracted JSON object substring:", e3);
+          }
         }
       }
       return null;
