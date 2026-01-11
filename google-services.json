@@ -12,7 +12,20 @@
           "package_name": "com.brainiac.repairmate"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "432126526994-9oga90chv05380q8t8lu9hnil4m66ljv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brainiac.repairmate",
+            "certificate_hash": "dd9dc485a95abf625133670499803b55d52e6bbe"
+          }
+        },
+        {
+          "client_id": "432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCu_JNZSXScwFz4IeBl2pDt_Cg7qMslqmQ"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

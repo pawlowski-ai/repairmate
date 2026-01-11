@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 
 type AuthMode = 'signin' | 'signup';
@@ -25,9 +25,10 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  // TODO: Replace with your actual Web Client ID from Firebase Console -> Authentication -> Google -> Web SDK configuration
+  // Web Client ID from Google Cloud Console -> Credentials
+  // IMPORTANT: This must be the WEB client ID, not Android client ID!
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com',
+    clientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Replace with your Web Client ID
   });
 
   useEffect(() => {

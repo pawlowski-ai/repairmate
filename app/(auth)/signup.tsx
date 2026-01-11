@@ -37,7 +37,20 @@ export default function SignUpScreen() {
       await upsertUserDoc(cred.user.uid);
     } catch (e: any) {
       const code = e?.code as string | undefined;
-      const message = code === 'auth/email-already-in-use' ? 'Email already in use' : 'Failed to create account';
+      let message = 'Failed to create account';
+      
+      if (code === 'auth/email-already-in-use') {
+        message = 'Email already in use';
+      } else if (code === 'auth/operation-not-allowed') {
+        message = 'Email/Password sign-in is not enabled. Please enable it in Firebase Console.';
+      } else if (code === 'auth/weak-password') {
+        message = 'Password is too weak';
+      } else if (code === 'auth/invalid-email') {
+        message = 'Invalid email address';
+      } else if (__DEV__) {
+        message = `Error: ${code || e?.message || 'Unknown error'}`;
+      }
+      
       setError(message);
       setIsLoading(false);
     }
