@@ -33,24 +33,36 @@ export default function SignUpScreen() {
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setIsLoading(true);
     try {
+      if (__DEV__) {
+        console.log('[SignUp] Starting registration for:', email.trim());
+      }
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      if (__DEV__) {
+        console.log('[SignUp] User created successfully, UID:', cred.user.uid);
+      }
       await upsertUserDoc(cred.user.uid);
+      if (__DEV__) {
+        console.log('[SignUp] User document created successfully');
+      }
     } catch (e: any) {
+      if (__DEV__) {
+        console.error('[SignUp] Error:', e);
+        console.error('[SignUp] Error code:', e?.code);
+        console.error('[SignUp] Error message:', e?.message);
+      }
       const code = e?.code as string | undefined;
       let message = 'Failed to create account';
-      
       if (code === 'auth/email-already-in-use') {
         message = 'Email already in use';
-      } else if (code === 'auth/operation-not-allowed') {
-        message = 'Email/Password sign-in is not enabled. Please enable it in Firebase Console.';
       } else if (code === 'auth/weak-password') {
         message = 'Password is too weak';
       } else if (code === 'auth/invalid-email') {
         message = 'Invalid email address';
-      } else if (__DEV__) {
-        message = `Error: ${code || e?.message || 'Unknown error'}`;
+      } else if (code) {
+        message = `Failed: ${code.replace('auth/', '')}`;
+      } else if (e?.message) {
+        message = `Error: ${e.message}`;
       }
-      
       setError(message);
       setIsLoading(false);
     }

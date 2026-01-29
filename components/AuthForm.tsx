@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 
 type AuthMode = 'signin' | 'signup';
@@ -25,10 +25,12 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  // Web Client ID from Google Cloud Console -> Credentials
-  // IMPORTANT: This must be the WEB client ID, not Android client ID!
+  // IMPORTANT: For React Native, use Android Client ID from google-services.json, NOT Web Client ID
+  // This is the oauth_client with client_type: 1 (Android) for your SHA fingerprint
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Replace with your Web Client ID
+    androidClientId: '432126526994-9oga90chv05380q8t8lu9hnil4m66ljv.apps.googleusercontent.com', // Android Client ID (SHA: dd9dc...)
+    iosClientId: undefined, // Add iOS client ID here if you have iOS app
+    webClientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Web Client ID (for backend verification)
   });
 
   useEffect(() => {
