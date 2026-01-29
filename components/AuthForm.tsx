@@ -1,12 +1,12 @@
 import { auth } from '@/services/firebase';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as Google from 'expo-auth-session/providers/google';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 
 type AuthMode = 'signin' | 'signup';
@@ -25,25 +25,65 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  // IMPORTANT: For React Native, use Android Client ID from google-services.json, NOT Web Client ID
-  // This is the oauth_client with client_type: 1 (Android) for your SHA fingerprint
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    androidClientId: '432126526994-9oga90chv05380q8t8lu9hnil4m66ljv.apps.googleusercontent.com', // Android Client ID (SHA: dd9dc...)
-    iosClientId: undefined, // Add iOS client ID here if you have iOS app
-    webClientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Web Client ID (for backend verification)
-  });
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  // Configure Google Sign-In on mount
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential).catch((err) => {
-        if (__DEV__) {
-          console.error('Google Sign-In Error', err);
-        }
-      });
+    GoogleSignin.configure({
+      webClientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Web Client ID for backend verification
+      offlineAccess: false,
+    });
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      
+      if (__DEV__) {
+        console.log('[GoogleSignIn] Starting sign in...');
+      }
+      
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      if (__DEV__) {
+        console.log('[GoogleSignIn] Got user info:', userInfo.user);
+      }
+      
+      if (!userInfo.idToken) {
+        throw new Error('No ID token received from Google');
+      }
+      
+      const credential = GoogleAuthProvider.credential(userInfo.idToken);
+      await signInWithCredential(auth, credential);
+      
+      if (__DEV__) {
+        console.log('[GoogleSignIn] Successfully signed in to Firebase');
+      }
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('[GoogleSignIn] Error:', error);
+        console.error('[GoogleSignIn] Error code:', error.code);
+      }
+      
+      // Handle specific error codes
+      if (error.code === 'SIGN_IN_CANCELLED') {
+        // User cancelled the login flow
+        return;
+      } else if (error.code === 'IN_PROGRESS') {
+        // Operation (e.g. sign in) is in progress already
+        return;
+      } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
+        console.error('Play services not available');
+      }
+      
+      // Show error to user
+      // You could add a state for Google Sign-In errors if needed
+    } finally {
+      setIsGoogleLoading(false);
     }
-  }, [response]);
+  };
 
   const canSubmit = email.trim().length > 0 && password.length >= 6 && !isSubmitting;
 
@@ -132,14 +172,15 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
           <View style={styles.socialIconsRow}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                promptAsync();
-              }}
-              disabled={!request}
+              onPress={handleGoogleSignIn}
+              disabled={isGoogleLoading}
               style={({ pressed }) => [styles.socialIconWrapper, pressed && styles.pressed]}
             >
-              <Ionicons name="logo-google" size={24} color="#FFFFFF" />
+              {isGoogleLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Ionicons name="logo-google" size={24} color="#FFFFFF" />
+              )}
             </Pressable>
           </View>
         </View>
