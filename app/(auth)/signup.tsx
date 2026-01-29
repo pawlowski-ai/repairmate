@@ -44,6 +44,7 @@ export default function SignUpScreen() {
       if (__DEV__) {
         console.log('[SignUp] User document created successfully');
       }
+      setIsLoading(false);
     } catch (e: any) {
       if (__DEV__) {
         console.error('[SignUp] Error:', e);

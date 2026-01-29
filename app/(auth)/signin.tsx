@@ -41,15 +41,36 @@ export default function SignInScreen() {
     if (v) { setError(v); return; }
     setIsLoading(true);
     try {
+      if (__DEV__) {
+        console.log('[SignIn] Attempting sign in for:', email.trim());
+      }
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+      if (__DEV__) {
+        console.log('[SignIn] Sign in successful, UID:', cred.user.uid);
+      }
       await upsertUserDoc(cred.user.uid);
+      setIsLoading(false);
     } catch (e: any) {
+      if (__DEV__) {
+        console.error('[SignIn] Error:', e);
+        console.error('[SignIn] Error code:', e?.code);
+        console.error('[SignIn] Error message:', e?.message);
+      }
       const code = e?.code as string | undefined;
-      const message =
-        code === 'auth/invalid-credential' ? 'Invalid email or password'
-        : code === 'auth/user-not-found' ? 'Account not found'
-        : code === 'auth/wrong-password' ? 'Wrong password'
-        : 'Failed to sign in';
+      let message = 'Failed to sign in';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+        message = 'Invalid email or password';
+      } else if (code === 'auth/user-not-found') {
+        message = 'Account not found';
+      } else if (code === 'auth/invalid-email') {
+        message = 'Invalid email address';
+      } else if (code === 'auth/invalid-argument') {
+        message = 'Invalid email or password format';
+      } else if (code) {
+        message = `Failed: ${code.replace('auth/', '')}`;
+      } else if (e?.message) {
+        message = `Error: ${e.message}`;
+      }
       setError(message);
       setIsLoading(false);
     }
