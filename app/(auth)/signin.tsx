@@ -20,10 +20,16 @@ export default function SignInScreen() {
     await setDoc(ref, {
       plan: existing?.plan ?? 'free',
       callsTotal: typeof existing?.callsTotal === 'number' ? existing.callsTotal : 0,
-      consented: existing?.consented === true,
+      consented: existing?.consented === true,  // Keep existing consent status
       createdAt: snap.exists() ? existing.createdAt ?? now : now,
       updatedAt: now,
     }, { merge: true });
+
+    console.log('[SignIn] User document updated:', {
+      uid,
+      exists: snap.exists(),
+      consented: existing?.consented === true,
+    });
 
     // Navigation is handled by RootLayout to prevent double redirects
   }, [db]);
@@ -45,17 +51,13 @@ export default function SignInScreen() {
         console.log('[SignIn] Attempting sign in for:', email.trim());
       }
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-      if (__DEV__) {
-        console.log('[SignIn] Sign in successful, UID:', cred.user.uid);
-      }
+      console.log('[SignIn] Sign in successful, UID:', cred.user.uid);
       await upsertUserDoc(cred.user.uid);
       setIsLoading(false);
     } catch (e: any) {
-      if (__DEV__) {
-        console.error('[SignIn] Error:', e);
-        console.error('[SignIn] Error code:', e?.code);
-        console.error('[SignIn] Error message:', e?.message);
-      }
+      console.error('[SignIn] Error:', e);
+      console.error('[SignIn] Error code:', e?.code);
+      console.error('[SignIn] Error message:', e?.message);
       const code = e?.code as string | undefined;
       let message = 'Failed to sign in';
       if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {

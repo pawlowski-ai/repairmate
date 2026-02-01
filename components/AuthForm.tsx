@@ -1,9 +1,10 @@
-import { auth } from '@/services/firebase';
+import { auth, db } from '@/services/firebase';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -40,32 +41,47 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
       setIsGoogleLoading(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       
-      if (__DEV__) {
-        console.log('[GoogleSignIn] Starting sign in...');
-      }
+      console.log('[GoogleSignIn] Starting sign in...');
       
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       
-      if (__DEV__) {
-        console.log('[GoogleSignIn] Got user info:', userInfo.user);
-      }
+      console.log('[GoogleSignIn] Got user info:', userInfo.user);
       
       if (!userInfo.idToken) {
         throw new Error('No ID token received from Google');
       }
       
       const credential = GoogleAuthProvider.credential(userInfo.idToken);
-      await signInWithCredential(auth, credential);
+      const result = await signInWithCredential(auth, credential);
       
-      if (__DEV__) {
-        console.log('[GoogleSignIn] Successfully signed in to Firebase');
-      }
+      console.log('[GoogleSignIn] Successfully signed in to Firebase, UID:', result.user.uid);
+      
+      // Create or update user document in Firestore (same as email/password flow)
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
+      const existingData = userSnap.exists() ? (userSnap.data() as any) : {};
+      const now = serverTimestamp();
+      
+      await setDoc(userRef, {
+        plan: existingData?.plan ?? 'free',
+        callsTotal: typeof existingData?.callsTotal === 'number' ? existingData.callsTotal : 0,
+        consented: existingData?.consented === true,  // Keep existing consent status
+        createdAt: userSnap.exists() ? existingData.createdAt ?? now : now,
+        updatedAt: now,
+      }, { merge: true });
+      
+      console.log('[GoogleSignIn] User document created/updated:', {
+        uid: result.user.uid,
+        exists: userSnap.exists(),
+        consented: existingData?.consented === true,
+      });
+      
+      // Navigation is handled by RootLayout based on consented status
     } catch (error: any) {
-      if (__DEV__) {
-        console.error('[GoogleSignIn] Error:', error);
-        console.error('[GoogleSignIn] Error code:', error.code);
-      }
+      console.error('[GoogleSignIn] Error:', error);
+      console.error('[GoogleSignIn] Error code:', error.code);
+      console.error('[GoogleSignIn] Error message:', error.message);
       
       // Handle specific error codes
       if (error.code === 'SIGN_IN_CANCELLED') {
@@ -75,7 +91,7 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
         // Operation (e.g. sign in) is in progress already
         return;
       } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
-        console.error('Play services not available');
+        console.error('[GoogleSignIn] Play services not available');
       }
       
       // Show error to user
