@@ -14,19 +14,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "432126526994-9oga90chv05380q8t8lu9hnil4m66ljv.apps.googleusercontent.com",
+          "client_id": "432126526994-f81mttrnuso55rrqdr6engbhpt34181p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.brainiac.repairmate",
-            "certificate_hash": "dd9dc485a95abf625133670499803b55d52e6bbe"
+            "certificate_hash": "9565adcf08d8ec9e44e53242540d8eeae141fcc3"
           }
         },
         {
-          "client_id": "432126526994-n4ejvlkttad42vbtqabb6h95hu0ghb3t.apps.googleusercontent.com",
+          "client_id": "432126526994-jrnuolrrpilgt4l7thjpjg75uig446ds.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.brainiac.repairmate",
-            "certificate_hash": "96630869f33144b3bc994a6e13fb57e0e83e3208"
+            "certificate_hash": "5dc7c714d3c67543417b5298964ebb83e92f1f20"
           }
         },
         {
