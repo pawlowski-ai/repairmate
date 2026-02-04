@@ -31,8 +31,9 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
   // Configure Google Sign-In on mount
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Web Client ID for backend verification
+      webClientId: '432126526994-qf7v8bthqohpvik7s51utjd7io8jin3m.apps.googleusercontent.com', // Web Client ID for Firebase
       offlineAccess: false,
+      scopes: ['profile', 'email'], // Request basic profile and email
     });
   }, []);
 
