@@ -1,0 +1,30 @@
+Fix: Complete auth flow with Firestore document creation and improved error handling
+
+Critical fixes for authentication issues:
+
+1. Google Sign-In now creates user document in Firestore
+   - Previously only created Firebase Auth user without Firestore document
+   - Now creates document with consented:false for proper routing
+   - Matches email/password flow logic
+
+2. Firebase Auth initialization refactored
+   - Removed Proxy pattern causing "invalid argument" errors
+   - Direct initialization with AsyncStorage persistence
+   - Eliminates race conditions during first auth attempt
+
+3. Enhanced routing logic in RootLayout
+   - Increased navigation timeout from 100ms to 200ms
+   - Added comprehensive logging for debugging
+   - Better detection of missing Firestore documents
+   - Clear log messages for each routing decision
+
+4. Detailed signup/signin logging
+   - Step-by-step registration logs
+   - Complete error object logging
+   - Easier troubleshooting of auth issues
+
+This resolves:
+- "invalid argument" error on first registration attempt
+- Google Sign-In dialog closing without navigation
+- Users seeing home screen instead of consents after registration
+- Session persistence issues after app restart

@@ -42,11 +42,22 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       
       console.log('[GoogleSignIn] Starting sign in...');
+      console.log('[GoogleSignIn] Checking Play Services...');
       
-      await GoogleSignin.hasPlayServices();
+      const hasPlayServices = await GoogleSignin.hasPlayServices();
+      console.log('[GoogleSignIn] Play Services available:', hasPlayServices);
+      
+      console.log('[GoogleSignIn] Calling signIn()...');
       const userInfo = await GoogleSignin.signIn();
+      console.log('[GoogleSignIn] signIn() returned:', userInfo);
+      console.log('[GoogleSignIn] userInfo type:', typeof userInfo);
+      
+      if (!userInfo) {
+        throw new Error('GoogleSignin.signIn() returned null or undefined');
+      }
       
       console.log('[GoogleSignIn] Got user info:', userInfo.user);
+      console.log('[GoogleSignIn] Has idToken:', !!userInfo.idToken);
       
       if (!userInfo.idToken) {
         throw new Error('No ID token received from Google');
