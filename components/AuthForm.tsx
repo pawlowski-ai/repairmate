@@ -48,18 +48,21 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
       console.log('[GoogleSignIn] Play Services available:', hasPlayServices);
       
       console.log('[GoogleSignIn] Calling signIn()...');
-      const userInfo = await GoogleSignin.signIn();
-      console.log('[GoogleSignIn] signIn() returned:', userInfo);
-      console.log('[GoogleSignIn] userInfo type:', typeof userInfo);
+      const response = await GoogleSignin.signIn();
+      console.log('[GoogleSignIn] signIn() returned:', response);
+      console.log('[GoogleSignIn] response type:', typeof response);
+      console.log('[GoogleSignIn] response.type:', response?.type);
       
-      if (!userInfo) {
-        throw new Error('GoogleSignin.signIn() returned null or undefined');
+      if (!response || response.type !== 'success') {
+        throw new Error(`Google Sign-In failed with type: ${response?.type || 'undefined'}`);
       }
       
-      console.log('[GoogleSignIn] Got user info:', userInfo.user);
-      console.log('[GoogleSignIn] Has idToken:', !!userInfo.idToken);
+      const userInfo = response.data;
+      console.log('[GoogleSignIn] Got user data:', userInfo);
+      console.log('[GoogleSignIn] User email:', userInfo?.user?.email);
+      console.log('[GoogleSignIn] Has idToken:', !!userInfo?.idToken);
       
-      if (!userInfo.idToken) {
+      if (!userInfo?.idToken) {
         throw new Error('No ID token received from Google');
       }
       
