@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "432126526994-b3g8vjm83jeof8oo3og452bjg8gonj1f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brainiac.repairmate",
+            "certificate_hash": "3754c05a5f4657924b5eee050d6ba2155ef4a079"
+          }
+        },
+        {
           "client_id": "432126526994-f81mttrnuso55rrqdr6engbhpt34181p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
