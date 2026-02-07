@@ -1,3 +1,4 @@
+import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { UserMenu } from "@/components/UserMenu";
 import { AppProvider } from "@/context/AppContext";
@@ -5,13 +6,14 @@ import { auth, db } from "@/services/firebase";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 
 export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -98,10 +100,18 @@ export default function RootLayout() {
     return () => unsub();
   }, [pathname, router, isMounted]);
 
-  if (isLoading) {
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  // Show animated splash while loading auth state
+  if (showSplash) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0f172a" }}>
-        <ActivityIndicator color="#38bdf8" />
+      <View style={{ flex: 1, backgroundColor: '#000000' }}>
+        <AnimatedSplash
+          isReady={!isLoading}
+          onAnimationComplete={handleSplashComplete}
+        />
       </View>
     );
   }
