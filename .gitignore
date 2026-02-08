@@ -36,9 +36,8 @@ yarn-error.*
 .env.production
 .env.development
 
-# Firebase / Google Services (contains API keys)
-google-services.json
-**/google-services.json
+# NOTE: google-services.json is NOT ignored - EAS Build needs it (file must be tracked by git).
+# Client keys in it are public in the app bundle; security is via Firebase rules.
 
 # typescript
 *.tsbuildinfo
