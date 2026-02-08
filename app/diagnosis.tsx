@@ -19,7 +19,6 @@ export default function DiagnosisScreen() {
     setIsLoading,
     setLoadingMessage,
     setError,
-    handleBackNavigation,
   } = useApp();
 
   // Guard against duplicate diagnosis calls (dev StrictMode, fast refresh, retry)

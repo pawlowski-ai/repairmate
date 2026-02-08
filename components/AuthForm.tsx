@@ -1,10 +1,10 @@
-import { auth, db } from '@/services/firebase';
+import { auth } from '@/services/firebase';
+import { upsertUserDoc } from '@/utils/auth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -41,76 +41,34 @@ export default function AuthForm({ mode, onSubmit, isSubmitting = false, errorMe
     try {
       setIsGoogleLoading(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      
-      console.log('[GoogleSignIn] Starting sign in...');
-      console.log('[GoogleSignIn] Checking Play Services...');
-      
-      const hasPlayServices = await GoogleSignin.hasPlayServices();
-      console.log('[GoogleSignIn] Play Services available:', hasPlayServices);
-      
-      console.log('[GoogleSignIn] Calling signIn()...');
+
+      await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      console.log('[GoogleSignIn] signIn() returned:', response);
-      console.log('[GoogleSignIn] response type:', typeof response);
-      console.log('[GoogleSignIn] response.type:', response?.type);
-      
+
       if (!response || response.type !== 'success') {
         throw new Error(`Google Sign-In failed with type: ${response?.type || 'undefined'}`);
       }
-      
+
       const userInfo = response.data;
-      console.log('[GoogleSignIn] Got user data:', userInfo);
-      console.log('[GoogleSignIn] User email:', userInfo?.user?.email);
-      console.log('[GoogleSignIn] Has idToken:', !!userInfo?.idToken);
-      
       if (!userInfo?.idToken) {
         throw new Error('No ID token received from Google');
       }
-      
+
       const credential = GoogleAuthProvider.credential(userInfo.idToken);
       const result = await signInWithCredential(auth, credential);
-      
-      console.log('[GoogleSignIn] Successfully signed in to Firebase, UID:', result.user.uid);
-      
+
       // Create or update user document in Firestore (same as email/password flow)
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      const existingData = userSnap.exists() ? (userSnap.data() as any) : {};
-      const now = serverTimestamp();
-      
-      await setDoc(userRef, {
-        plan: existingData?.plan ?? 'free',
-        callsTotal: typeof existingData?.callsTotal === 'number' ? existingData.callsTotal : 0,
-        consented: existingData?.consented === true,  // Keep existing consent status
-        createdAt: userSnap.exists() ? existingData.createdAt ?? now : now,
-        updatedAt: now,
-      }, { merge: true });
-      
-      console.log('[GoogleSignIn] User document created/updated:', {
-        uid: result.user.uid,
-        exists: userSnap.exists(),
-        consented: existingData?.consented === true,
-      });
-      
+      await upsertUserDoc(result.user.uid);
+
       // Navigation is handled by RootLayout based on consented status
-    } catch (error: any) {
-      console.error('[GoogleSignIn] Error:', error);
-      console.error('[GoogleSignIn] Error code:', error.code);
-      console.error('[GoogleSignIn] Error message:', error.message);
-      
-      // Handle specific error codes
-      if (error.code === 'SIGN_IN_CANCELLED') {
-        // User cancelled the login flow
+    } catch (error: unknown) {
+      const googleError = error as { code?: string; message?: string };
+      if (__DEV__) console.error('[GoogleSignIn] Error:', googleError.code, googleError.message);
+
+      // User cancelled or sign-in already in progress — silently ignore
+      if (googleError.code === 'SIGN_IN_CANCELLED' || googleError.code === 'IN_PROGRESS') {
         return;
-      } else if (error.code === 'IN_PROGRESS') {
-        // Operation (e.g. sign in) is in progress already
-        return;
-      } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
-        console.error('[GoogleSignIn] Play services not available');
       }
-      
-      // Show error to user
-      // You could add a state for Google Sign-In errors if needed
     } finally {
       setIsGoogleLoading(false);
     }

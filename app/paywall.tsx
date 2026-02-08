@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
-// TODO: Replace with your actual RevenueCat API Keys
 const API_KEY_IOS = 'sk_neRZcYSyIzluakZKApcLvcgMNmNiq';
 const API_KEY_ANDROID = 'sk_neRZcYSyIzluakZKApcLvcgMNmNiq';
 
@@ -33,7 +32,7 @@ export default function PaywallScreen() {
           setCurrentOffering(monthly || offerings.current.availablePackages[0]);
         }
       } catch (e) {
-        console.log('RevenueCat Error', e);
+        if (__DEV__) console.error('[RevenueCat] Offerings error:', e);
       }
     };
     initRC();
@@ -48,10 +47,7 @@ export default function PaywallScreen() {
 
   const handlePurchase = async () => {
     if (!currentOffering) {
-      // Fallback for testing UI without configured keys
-      // Alert.alert("Configuration Error", "Please configure RevenueCat API Keys.");
-      // For MVP demo purpose, we might want to just console log if keys are missing
-      console.log("No offering loaded. Check API Keys.");
+      if (__DEV__) console.warn('[Paywall] No offering loaded. Check API Keys.');
       return;
     }
     

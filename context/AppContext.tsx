@@ -12,10 +12,6 @@ interface AppState {
   setDiagnosisResult: (result: DiagnosisResult | null) => void;
   repairSteps: RepairStep[] | null;
   setRepairSteps: (steps: RepairStep[] | null) => void;
-  isModalChatOpen: boolean;
-  setIsModalChatOpen: (isOpen: boolean) => void;
-  currentStepForChat: RepairStep | null;
-  setCurrentStepForChat: (step: RepairStep | null) => void;
   chatMessages: ChatMessage[];
   setChatMessages: (messages: ChatMessage[]) => void;
   addChatMessage: (message: ChatMessage) => void;
@@ -41,8 +37,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [userIssueImageBase64, setUserIssueImageBase64] = useState<string | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [repairSteps, setRepairSteps] = useState<RepairStep[] | null>(null);
-  const [isModalChatOpen, setIsModalChatOpen] = useState(false);
-  const [currentStepForChat, setCurrentStepForChat] = useState<RepairStep | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Loading...");
@@ -68,8 +62,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUserIssueImageBase64(null);
     setDiagnosisResult(null);
     setRepairSteps(null);
-    setIsModalChatOpen(false);
-    setCurrentStepForChat(null);
     setChatMessages([]);
     setIsLoading(false);
     setDiagnosisAttempts(0);
@@ -80,8 +72,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     userIssueImageBase64, setUserIssueImageBase64,
     diagnosisResult, setDiagnosisResult,
     repairSteps, setRepairSteps,
-    isModalChatOpen, setIsModalChatOpen,
-    currentStepForChat, setCurrentStepForChat,
     chatMessages, setChatMessages, addChatMessage,
     isLoading, setIsLoading,
     loadingMessage, setLoadingMessage,

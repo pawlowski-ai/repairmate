@@ -31,69 +31,44 @@ export default function RootLayout() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       try {
-        // Splash dla niezalogowanych
         if (!user) {
-          console.log('[RootLayout] No user logged in');
           setIsLoading(false);
           const isAuthPath = pathname === "/splash" || pathname === "/signin" || pathname === "/signup";
           if (!isAuthPath && isMounted) {
-            // Defer navigation to prevent race conditions
             navigationTimeoutRef.current = setTimeout(() => {
-              if (isMounted) {
-                console.log('[RootLayout] Redirecting to /splash (no user)');
-                router.replace("/splash");
-              }
+              if (isMounted) router.replace("/splash");
             }, 100);
             return;
           }
           return;
         }
 
-        console.log('[RootLayout] User logged in, UID:', user.uid);
-        console.log('[RootLayout] Current pathname:', pathname);
-        
-        // Fetch user document from Firestore
         const userRef = doc(db, 'users', user.uid);
         const snap = await getDoc(userRef);
-        console.log('[RootLayout] Firestore document exists:', snap.exists());
-        
-        if (!snap.exists()) {
-          console.error('[RootLayout] CRITICAL: User document does NOT exist in Firestore!');
-          console.log('[RootLayout] This means registration was incomplete');
-          // For safety, still allow navigation but log the issue
+
+        if (__DEV__ && !snap.exists()) {
+          console.warn('[RootLayout] User document missing in Firestore for UID:', user.uid);
         }
-        
-        const userData = snap.exists() ? (snap.data() as any) : {};
+
+        const userData = snap.exists() ? snap.data() : {};
         const consented = userData?.consented === true;
-        console.log('[RootLayout] User consented:', consented);
-        console.log('[RootLayout] User data:', JSON.stringify(userData, null, 2));
-        
+
         setIsLoading(false);
-        
-        // If not consented and not already on consents page, redirect
+
         if (!consented && pathname !== "/consents" && isMounted) {
-          console.log('[RootLayout] User needs to consent, redirecting to /consents');
           navigationTimeoutRef.current = setTimeout(() => {
-            if (isMounted) {
-              console.log('[RootLayout] Executing redirect to /consents');
-              router.replace("/consents");
-            }
-          }, 200); // Increased timeout to 200ms
+            if (isMounted) router.replace("/consents");
+          }, 200);
           return;
         }
-        
-        // If consented and on auth pages, redirect to home
+
         if (consented && (pathname === "/signin" || pathname === "/signup" || pathname === "/splash") && isMounted) {
-          console.log('[RootLayout] User already consented, redirecting to /');
           navigationTimeoutRef.current = setTimeout(() => {
-            if (isMounted) {
-              console.log('[RootLayout] Executing redirect to /');
-              router.replace("/");
-            }
-          }, 200); // Increased timeout to 200ms
+            if (isMounted) router.replace("/");
+          }, 200);
         }
       } catch (error) {
-        console.error('[RootLayout] Auth state error:', error);
+        if (__DEV__) console.error('[RootLayout] Auth state error:', error);
         setIsLoading(false);
       }
     });
