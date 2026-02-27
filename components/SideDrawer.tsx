@@ -1,7 +1,9 @@
-import { auth } from '@/services/firebase';
+import { auth, db } from '@/services/firebase';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Dimensions, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { deleteUser } from 'firebase/auth';
+import { deleteDoc, doc } from 'firebase/firestore';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Dimensions, Easing, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -15,6 +17,7 @@ type Props = {
 export const SideDrawer: React.FC<Props> = ({ isOpen, onClose, drawerWidth, plan = 'Free' }) => {
   const router = useRouter();
   const user = auth.currentUser;
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Initial position off-screen
   const initialWidth = drawerWidth ?? (SCREEN_WIDTH * 0.84);
@@ -67,6 +70,65 @@ export const SideDrawer: React.FC<Props> = ({ isOpen, onClose, drawerWidth, plan
     } finally {
       router.replace('/signin');
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            const subscriptionWarning = plan === 'Pro'
+              ? '\n\n⚠️ You have an active Pro subscription. Deleting your account will NOT cancel it automatically — please cancel it manually in Google Play before proceeding.'
+              : '';
+            Alert.alert(
+              'Final Confirmation',
+              `All your data will be permanently deleted. You will not be able to recover your account.${subscriptionWarning}`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete My Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) return;
+
+                    setIsDeleting(true);
+                    close();
+
+                    try {
+                      await deleteDoc(doc(db, 'users', currentUser.uid));
+                      await deleteUser(currentUser);
+                      router.replace('/signin');
+                    } catch (error: unknown) {
+                      setIsDeleting(false);
+                      const firebaseError = error as { code?: string };
+                      if (firebaseError.code === 'auth/requires-recent-login') {
+                        Alert.alert(
+                          'Sign in required',
+                          'For security reasons, please sign out and sign in again before deleting your account.',
+                          [{ text: 'OK' }]
+                        );
+                      } else {
+                        Alert.alert(
+                          'Error',
+                          'Failed to delete account. Please try again later.',
+                          [{ text: 'OK' }]
+                        );
+                      }
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -123,6 +185,19 @@ export const SideDrawer: React.FC<Props> = ({ isOpen, onClose, drawerWidth, plan
           <Pressable onPress={handleSignOut} style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}>
             <Text style={styles.itemText}>Log out</Text>
           </Pressable>
+
+          <View style={styles.separator} />
+
+          {/* Delete Account */}
+          <Pressable
+            onPress={handleDeleteAccount}
+            disabled={isDeleting}
+            style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
+          >
+            <Text style={[styles.itemText, styles.deleteText]}>
+              {isDeleting ? 'Deleting…' : 'Delete Account'}
+            </Text>
+          </Pressable>
         </Animated.View>
       </View>
     </View>
@@ -158,6 +233,7 @@ const styles = StyleSheet.create({
   item: { paddingHorizontal: 20, paddingVertical: 14 },
   itemPressed: { backgroundColor: '#111111' },
   itemText: { color: '#ECEDEE', fontSize: 16 },
+  deleteText: { color: '#F87171' },
 });
 
 
