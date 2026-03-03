@@ -1,32 +1,620 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RepairMate – Legal</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; }
-      .container { max-width: 860px; margin: 0 auto; padding: 32px 16px; }
-      header { text-align: center; margin-bottom: 24px; }
-      a { color: #0ea5e9; }
-      .links { display: flex; gap: 16px; justify-content: center; margin-top: 16px; }
-      .card { background:#f8fafc; border:1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
-    </style>
-  </head>
-  <body>
-    <main class="container">
-      <header>
-        <h1>RepairMate</h1>
-        <p>Welcome. Use the links below to view our Terms of Use and Privacy Policy.</p>
-      </header>
-      <div class="card">
-        <div class="links">
-          <a href="/terms" rel="noopener">Terms of Use</a>
-          <a href="/privacy" rel="noopener">Privacy Policy</a>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MendWise — AI-Powered Repair Guides</title>
+  <meta name="description" content="MendWise gives you step-by-step AI repair guides for your home and car. Describe the problem, get the fix. Free to start." />
+  <meta property="og:title" content="MendWise — AI-Powered Repair Guides" />
+  <meta property="og:description" content="Fix anything yourself. AI-powered step-by-step repair guides for home and car." />
+  <meta property="og:image" content="/images/icon.png" />
+  <link rel="icon" href="/images/icon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --bg2:       #111827;
+      --bg3:       #1e293b;
+      --green:     #22C55E;
+      --white:     #ffffff;
+      --muted:     rgba(255,255,255,0.60);
+      --border:    rgba(255,255,255,0.08);
+      --radius:    16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 64px;
+      background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--white);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
+    .nav-logo span { color: var(--green); }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      background: var(--green) !important;
+      color: #052e16 !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600 !important;
+    }
+    .nav-cta:hover { background: #16a34a !important; }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 5% 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 10%, rgba(34,197,94,0.12) 0%, transparent 70%),
+        linear-gradient(180deg, #0c1a0e 0%, #0f172a 40%, #111827 100%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 0%, black 30%, transparent 80%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fadeInDown 0.6s ease both;
+    }
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 2s infinite;
+    }
+    h1 {
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      animation: fadeInUp 0.7s 0.1s ease both;
+    }
+    h1 .accent { color: var(--green); }
+    .hero-sub {
+      margin-top: 20px;
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 0.7s 0.2s ease both;
+    }
+    .hero-cta-row {
+      margin-top: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.7s 0.35s ease both;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--green);
+      color: #052e16;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      animation: pulse-btn 3s 1.5s infinite;
+    }
+    .btn-primary:hover {
+      background: #16a34a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(34,197,94,0.3);
+    }
+    .qr-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    #qr-canvas { border-radius: 10px; background: white; padding: 6px; width: 88px; height: 88px; }
+    .qr-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.04em; }
+
+    /* SCREENSHOTS */
+    #hero-screens {
+      padding: 0 5% 80px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .phone-wrap {
+      width: 180px;
+      flex-shrink: 0;
+      transition: transform 0.4s ease;
+      animation: fadeInUp 0.7s ease both;
+    }
+    .phone-wrap:nth-child(1) { animation-delay: 0.1s; transform: translateY(0) rotate(-3deg); }
+    .phone-wrap:nth-child(2) { animation-delay: 0.2s; transform: translateY(-20px) rotate(0deg); }
+    .phone-wrap:nth-child(3) { animation-delay: 0.3s; transform: translateY(0) rotate(3deg); }
+    .phone-wrap:hover { transform: translateY(-8px) rotate(0deg) scale(1.04) !important; }
+    .phone-frame {
+      width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .phone-frame img { width: 100%; display: block; }
+
+    /* SECTIONS */
+    section { padding: 88px 5%; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      max-width: 560px;
+    }
+    .section-subtitle {
+      margin-top: 14px;
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 500px;
+    }
+    .text-center { text-align: center; }
+    .text-center .section-title,
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    /* FEATURES */
+    #features { background: var(--bg2); }
+    .features-grid {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+    .feature-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+      border-color: rgba(34,197,94,0.3);
+      box-shadow: 0 8px 32px rgba(34,197,94,0.07);
+      transform: translateY(-4px);
+    }
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: rgba(34,197,94,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+    /* HOW IT WORKS */
+    #how { background: var(--bg); }
+    .steps-grid {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 28px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent);
+    }
+    .step { text-align: center; padding: 0 24px; opacity: 0; transform: translateY(24px); }
+    .step.visible {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: rgba(34,197,94,0.12);
+      border: 2px solid rgba(34,197,94,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 800; color: var(--green);
+      margin: 0 auto 20px;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 0.88rem; color: var(--muted); line-height: 1.55; }
+
+    /* STATS */
+    #proof { background: var(--bg2); padding: 56px 5%; }
+    .proof-inner {
+      max-width: 900px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-around;
+      flex-wrap: wrap; gap: 32px; text-align: center;
+    }
+    .proof-stat { opacity: 0; transform: translateY(16px); }
+    .proof-stat.visible {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .proof-stat .num { font-size: 2.4rem; font-weight: 800; color: var(--green); letter-spacing: -0.04em; line-height: 1; }
+    .proof-stat .lbl { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    /* DOWNLOAD */
+    #download { background: var(--bg); text-align: center; }
+    .download-card {
+      max-width: 600px; margin: 48px auto 0;
+      background: linear-gradient(135deg, #0c1a0e 0%, #1e293b 100%);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 24px;
+      padding: 56px 40px;
+      position: relative; overflow: hidden;
+    }
+    .download-card::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%);
+    }
+    .download-card h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px;
+    }
+    .download-card > p { color: var(--muted); font-size: 1rem; margin-bottom: 36px; }
+    .download-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 32px; flex-wrap: wrap;
+    }
+    #qr-canvas-2 { border-radius: 10px; background: white; padding: 8px; width: 100px; height: 100px; }
+    .free-note { margin-top: 20px; font-size: 0.8rem; color: var(--muted); }
+    .free-note strong { color: var(--green); }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 32px 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; }
+    .footer-logo img { width: 24px; height: 24px; border-radius: 6px; }
+    .footer-logo span { color: var(--green); }
+    .footer-links { display: flex; gap: 24px; list-style: none; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: 0.78rem; color: var(--muted); }
+
+    /* ANIMATIONS */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+    @keyframes pulse-btn {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+      50%       { box-shadow: 0 0 0 8px rgba(34,197,94,0.15); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .nav-links li:not(:last-child) { display: none; }
+      #hero-screens { gap: 12px; }
+      .phone-wrap { width: 130px; }
+      .phone-wrap:nth-child(1) { transform: rotate(-3deg); }
+      .phone-wrap:nth-child(2) { transform: translateY(-14px); }
+      .phone-wrap:nth-child(3) { transform: rotate(3deg); }
+      .steps-grid::before { display: none; }
+      .download-card { padding: 36px 24px; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="/images/icon.png" alt="MendWise" />
+    Mend<span>Wise</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#download" class="nav-cta">Download Free</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">AI-Powered Repairs</div>
+    <h1>Fix Anything.<br><span class="accent">Ask AI.</span></h1>
+    <p class="hero-sub">
+      Describe your home or car problem — get expert step-by-step guidance in seconds. No repairman needed.
+    </p>
+    <div class="hero-cta-row">
+      <a href="https://play.google.com/store/apps/details?id=com.brainiac.repairmate"
+         class="btn-primary" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.18 23.9c.37.2.8.21 1.19.03l12.09-6.98-2.67-2.67-10.61 9.62zM.5 1.28C.19 1.6 0 2.09 0 2.74v18.52c0 .65.19 1.14.5 1.46l.08.07 10.38-10.38v-.25L.58 1.21.5 1.28zM20.48 10.27l-2.72-1.57-3 2.95 3 2.95 2.75-1.58c.78-.45.78-1.3-.03-1.75zM4.37.1L16.46 7.08l-2.67 2.67L3.18.13C3.57-.05 4-.04 4.37.1z"/>
+        </svg>
+        Get it on Google Play
+      </a>
+      <div class="qr-block">
+        <canvas id="qr-canvas"></canvas>
+        <span class="qr-label">Scan to download</span>
       </div>
-    </main>
-  </body>
-  </html>
+    </div>
+  </div>
+</section>
 
+<!-- PHONE SCREENSHOTS -->
+<div id="hero-screens">
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <img src="/images/screen1.jpg" alt="MendWise — describe your problem" loading="lazy" />
+    </div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <img src="/images/screen2.jpg" alt="AI diagnosis result" loading="lazy" />
+    </div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <img src="/images/screen3.jpg" alt="Step-by-step repair guide" loading="lazy" />
+    </div>
+  </div>
+</div>
 
+<!-- FEATURES -->
+<section id="features">
+  <div class="text-center">
+    <div class="section-label">Why MendWise</div>
+    <h2 class="section-title">Everything you need to fix it yourself</h2>
+    <p class="section-subtitle">No experience needed. Describe the problem and let AI do the thinking.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Instant AI Diagnosis</h3>
+      <p>Describe your problem in plain language or snap a photo. MendWise figures out what's wrong — even if you have no idea.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Step-by-Step Guides</h3>
+      <p>Clear, numbered instructions tailored to your exact problem. No jargon, no guessing — just follow along and fix it.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏠</div>
+      <h3>Home &amp; Car Repairs</h3>
+      <p>Leaky faucet, broken boiler, engine warning light — MendWise covers hundreds of household and automotive repair issues.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <h3>Save on Repair Costs</h3>
+      <p>Most small repairs don't need a professional. MendWise helps you handle them yourself — and know when to call for help.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📸</div>
+      <h3>Photo Input</h3>
+      <p>Can't describe the problem? Just take a photo. The AI analyzes it and gives you a diagnosis based on what it sees.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Works in Seconds</h3>
+      <p>No waiting, no browsing forums. Type or snap your problem and get a full repair guide instantly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="text-center">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Three steps to fix anything</h2>
+    <p class="section-subtitle">Simpler than calling a repairman — and free to start.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Describe the Problem</h3>
+      <p>Type a few words about what's broken, or take a photo of the issue. Any problem, any appliance, any room or car.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>AI Diagnoses It</h3>
+      <p>MendWise analyzes your input and identifies the most likely cause — even without any technical knowledge from you.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Follow the Guide</h3>
+      <p>Get a clear, numbered repair guide tailored to your exact problem. Step by step until it's fixed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="proof">
+  <div class="proof-inner">
+    <div class="proof-stat">
+      <div class="num">3</div>
+      <div class="lbl">free AI repairs to start</div>
+    </div>
+    <div class="proof-stat">
+      <div class="num">100+</div>
+      <div class="lbl">repair categories</div>
+    </div>
+    <div class="proof-stat">
+      <div class="num">Seconds</div>
+      <div class="lbl">to get your repair guide</div>
+    </div>
+    <div class="proof-stat">
+      <div class="num">$0</div>
+      <div class="lbl">to get started</div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section id="download">
+  <div class="text-center">
+    <div class="section-label">Get the App</div>
+    <h2 class="section-title">Ready to fix it yourself?</h2>
+  </div>
+  <div class="download-card">
+    <h2>Start with 3 free AI repairs</h2>
+    <p>No credit card required. Available on Android — iOS coming soon.</p>
+    <div class="download-row">
+      <a href="https://play.google.com/store/apps/details?id=com.brainiac.repairmate"
+         class="btn-primary" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.18 23.9c.37.2.8.21 1.19.03l12.09-6.98-2.67-2.67-10.61 9.62zM.5 1.28C.19 1.6 0 2.09 0 2.74v18.52c0 .65.19 1.14.5 1.46l.08.07 10.38-10.38v-.25L.58 1.21.5 1.28zM20.48 10.27l-2.72-1.57-3 2.95 3 2.95 2.75-1.58c.78-.45.78-1.3-.03-1.75zM4.37.1L16.46 7.08l-2.67 2.67L3.18.13C3.57-.05 4-.04 4.37.1z"/>
+        </svg>
+        Download on Google Play
+      </a>
+      <canvas id="qr-canvas-2"></canvas>
+    </div>
+    <p class="free-note"><strong>Free to start</strong> &middot; Pro plan $15/month for unlimited repairs</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <img src="/images/icon.png" alt="MendWise" />
+    Mend<span>Wise</span>
+  </div>
+  <ul class="footer-links">
+    <li><a href="/privacy">Privacy Policy</a></li>
+    <li><a href="/terms">Terms of Use</a></li>
+    <li><a href="mailto:lpawlowski99@gmail.com">Contact</a></li>
+  </ul>
+  <span class="footer-copy">&copy; 2026 MendWise. All rights reserved.</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script>
+  const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.brainiac.repairmate';
+  const qrOpts = { width: 88, margin: 1, color: { dark: '#000000', light: '#ffffff' } };
+  QRCode.toCanvas(document.getElementById('qr-canvas'), PLAY_URL, qrOpts);
+  QRCode.toCanvas(document.getElementById('qr-canvas-2'), PLAY_URL, { ...qrOpts, width: 100 });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const delay = parseInt(entry.target.dataset.delay || '0');
+        setTimeout(() => entry.target.classList.add('visible'), delay);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.feature-card').forEach((el, i) => {
+    el.dataset.delay = String(i * 80);
+    observer.observe(el);
+  });
+  document.querySelectorAll('.step').forEach((el, i) => {
+    el.dataset.delay = String(i * 120);
+    observer.observe(el);
+  });
+  document.querySelectorAll('.proof-stat').forEach((el, i) => {
+    el.dataset.delay = String(i * 100);
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
