@@ -1,66 +1,83 @@
-# RepairMate / MendWise
+# MendWise
 
-RepairMate, currently branded in parts of the product as MendWise, is an AI-powered mobile repair assistant for diagnosing common home and car problems from a short text description and, optionally, a photo.
+**AI repair guidance for home and car problems.**
 
-The repository is an Expo + React Native application backed by Firebase and a Gemini-powered Cloud Function. It is built as a practical AI product prototype: describe what is broken, get a likely diagnosis, ask for an alternative diagnosis if the first one is wrong, then continue into step-by-step repair guidance.
+MendWise is an Expo + React Native mobile app that helps users describe a broken appliance, household issue, or car problem and receive a clear AI-assisted diagnosis. Users can submit text, add a photo, ask for an alternative diagnosis, and continue into step-by-step repair guidance.
 
-## What It Does
+The project is built as a practical AI product prototype, not just a UI demo. It combines a mobile app, Firebase authentication and usage tracking, a Gemini-backed Cloud Function, consent gating, public legal pages, and a RevenueCat subscription flow.
 
-- accepts natural-language repair problems from the user
-- supports optional camera or image-library uploads for visual diagnosis context
-- sends diagnosis requests to a Firebase Cloud Function using Gemini
-- returns a concise likely diagnosis
-- supports an alternative diagnosis flow when the user rejects the first answer
-- generates follow-up repair steps from the accepted diagnosis
-- handles authentication and consent gating through Firebase
-- includes usage limits and a RevenueCat-backed paywall screen
-- includes public web privacy and terms pages
+## Product Flow
 
-## Why This Project Matters
+1. User describes what is broken or uploads a photo.
+2. MendWise sends the request to a Firebase Cloud Function.
+3. Gemini returns a concise likely diagnosis under a bounded repair-assistant prompt.
+4. User can accept the diagnosis, request a different plausible diagnosis, or continue into repair steps.
+5. The app generates structured, beginner-friendly repair instructions and supports follow-up questions.
+6. Free usage is metered; paid access is handled through RevenueCat.
 
-This project is a portfolio proof point for AI workflow and AI product operations work, not just mobile UI work.
+## What This Demonstrates
 
-It demonstrates:
-
-- prompt and system-instruction design for a bounded AI assistant
-- model-output workflows: validation, diagnosis, alternative diagnosis, repair steps, and chat
-- safety-aware user guidance for repair scenarios where bad advice could matter
-- practical integration of Gemini, Firebase Auth, Firestore, Cloud Functions, and RevenueCat
-- product thinking around onboarding, consent, usage metering, paywall behavior, and public legal pages
-- shipping a complete AI-assisted user flow with mobile and web-facing surfaces
+- AI product workflow design from intake to diagnosis to repair steps
+- prompt and system-instruction design for a bounded assistant
+- model safety thinking for repair advice where overconfident guidance can create risk
+- multimodal UX using text plus optional image input
+- Firebase Auth, Firestore, Cloud Functions, and hosted legal pages
+- RevenueCat paywall integration and subscription-state handling
+- mobile app delivery with Expo, React Native, TypeScript, and Expo Router
 
 ## Core Stack
 
-- Expo 53
-- React Native 0.79
-- TypeScript
-- Expo Router
-- Firebase Auth
-- Firestore
-- Firebase Cloud Functions
-- Google Gemini via `@google/generative-ai`
-- RevenueCat / `react-native-purchases`
-- Expo Image Picker
+| Area | Stack |
+| --- | --- |
+| Mobile | Expo 53, React Native 0.79, TypeScript, Expo Router |
+| AI | Gemini 2.5 Flash via Firebase Cloud Function |
+| Backend | Firebase Auth, Firestore, Cloud Functions, Firebase Hosting |
+| Monetization | RevenueCat, in-app purchases |
+| Media | Expo Image Picker, camera and gallery upload |
+| Web | Static privacy, terms, and landing pages |
 
 ## Key Files
 
-- `app/index.tsx` - main problem intake screen with text and image input
-- `app/diagnosis.tsx` - diagnosis result and alternative diagnosis flow
-- `app/steps.tsx` - repair steps flow after a diagnosis is accepted
-- `services/geminiService.ts` - client-side AI workflow wrapper
-- `services/api.ts` - backend call wrapper and paywall/sign-in handling
-- `functions/index.js` - Firebase Cloud Function that calls Gemini
-- `constants/index.ts` - system instructions and safety/product copy
-- `app/paywall.tsx` - RevenueCat paywall screen
-- `app/consents.tsx` - consent gate
-- `web/privacy.html` and `web/terms.html` - public legal pages
+| File | Purpose |
+| --- | --- |
+| `app/index.tsx` | Problem intake screen with text and image input |
+| `app/diagnosis.tsx` | Diagnosis result and alternative diagnosis flow |
+| `app/steps.tsx` | Repair-step generation and display |
+| `services/geminiService.ts` | Client-side AI workflow wrapper |
+| `services/api.ts` | Authenticated backend call wrapper |
+| `functions/index.js` | Firebase Cloud Function that calls Gemini |
+| `constants/index.ts` | App copy, repair-assistant prompts, and response parsing |
+| `app/paywall.tsx` | RevenueCat paywall screen |
+| `app/consents.tsx` | Consent gate |
+| `web/privacy.html`, `web/terms.html` | Public legal pages |
 
-## Running Locally
+## Security Notes
+
+The Gemini API key is not stored in the mobile client. It is loaded as a Firebase Functions secret and accessed server-side in `functions/index.js`.
+
+Firebase client configuration files such as `firebaseConfig.ts` and `google-services.json` contain public client identifiers required by Firebase apps. They should still be protected through Firebase Security Rules, Google Cloud API restrictions, and authorized domain/package configuration.
+
+RevenueCat SDK keys are loaded from Expo public environment variables and are intentionally not hardcoded in source. See `.env.example`.
+
+## Local Development
 
 Install dependencies:
 
 ```bash
 npm install
+```
+
+Create local environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Set the RevenueCat public SDK keys:
+
+```bash
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=your_ios_public_sdk_key
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=your_android_public_sdk_key
 ```
 
 Start the Expo app:
@@ -75,8 +92,8 @@ Run on web:
 npm run web
 ```
 
-The full AI flow requires configured Firebase, Gemini, and RevenueCat credentials. Local UI development can still be done with the Expo development server, but production diagnosis calls depend on the Firebase Cloud Function and the configured Gemini secret.
+The complete AI diagnosis flow requires configured Firebase, Gemini, and RevenueCat services. Local UI work can run through Expo, but production diagnosis calls depend on the deployed Firebase Cloud Function and configured Gemini secret.
 
 ## Current Status
 
-This is an MVP-stage AI product prototype. The repo contains the main mobile app, Firebase function, product docs, brand notes, legal pages, and setup checklists. It is intended to show practical AI workflow execution, prompt-controlled product behavior, and end-to-end product thinking around an AI assistant.
+MendWise is an MVP-stage AI product prototype. The repository contains the main mobile app, Firebase function, product docs, brand notes, legal pages, setup checklists, and web-facing pages. It is intended to show practical AI workflow execution, safety-aware prompt design, and end-to-end product thinking around an AI assistant.
