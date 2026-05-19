@@ -8,8 +8,10 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
-const API_KEY_IOS = 'sk_neRZcYSyIzluakZKApcLvcgMNmNiq';
-const API_KEY_ANDROID = 'sk_neRZcYSyIzluakZKApcLvcgMNmNiq';
+const REVENUECAT_API_KEYS = {
+  ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+};
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -18,16 +20,20 @@ export default function PaywallScreen() {
 
   useEffect(() => {
     const initRC = async () => {
-      if (Platform.OS === 'ios') {
-        Purchases.configure({ apiKey: API_KEY_IOS });
-      } else if (Platform.OS === 'android') {
-        Purchases.configure({ apiKey: API_KEY_ANDROID });
+      const apiKey = Platform.OS === 'ios'
+        ? REVENUECAT_API_KEYS.ios
+        : REVENUECAT_API_KEYS.android;
+
+      if (!apiKey) {
+        if (__DEV__) console.warn('[RevenueCat] Missing public SDK key. Set EXPO_PUBLIC_REVENUECAT_IOS_API_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY.');
+        return;
       }
-      
+
+      Purchases.configure({ apiKey });
+
       try {
         const offerings = await Purchases.getOfferings();
         if (offerings.current && offerings.current.availablePackages.length > 0) {
-          // Assuming we want the monthly package, or the first available
           const monthly = offerings.current.availablePackages.find(p => p.packageType === 'MONTHLY');
           setCurrentOffering(monthly || offerings.current.availablePackages[0]);
         }
@@ -47,24 +53,24 @@ export default function PaywallScreen() {
 
   const handlePurchase = async () => {
     if (!currentOffering) {
-      if (__DEV__) console.warn('[Paywall] No offering loaded. Check API Keys.');
+      if (__DEV__) console.warn('[Paywall] No offering loaded. Check RevenueCat configuration.');
       return;
     }
-    
+
     setIsPurchasing(true);
     try {
       const { customerInfo } = await Purchases.purchasePackage(currentOffering);
-      if (customerInfo.entitlements.active['pro']) { // 'pro' must match entitlement ID in RC
+      if (customerInfo.entitlements.active['pro']) {
         const uid = auth.currentUser?.uid;
         if (uid) {
           await setDoc(doc(db, 'users', uid), { plan: 'pro' }, { merge: true });
         }
-        Alert.alert("Success", "You are now a Pro member!");
+        Alert.alert('Success', 'You are now a Pro member!');
         router.back();
       }
     } catch (e: any) {
       if (!e.userCancelled) {
-        Alert.alert("Error", e.message);
+        Alert.alert('Error', e.message);
       }
     } finally {
       setIsPurchasing(false);
@@ -80,13 +86,13 @@ export default function PaywallScreen() {
         if (uid) {
           await setDoc(doc(db, 'users', uid), { plan: 'pro' }, { merge: true });
         }
-        Alert.alert("Restored", "Your Pro access has been restored.");
+        Alert.alert('Restored', 'Your Pro access has been restored.');
         router.back();
       } else {
-        Alert.alert("Info", "No active Pro subscription found to restore.");
+        Alert.alert('Info', 'No active Pro subscription found to restore.');
       }
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      Alert.alert('Error', e.message);
     } finally {
       setIsPurchasing(false);
     }
@@ -164,7 +170,7 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
   topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingTop: 16, paddingBottom: 8 },
   closeButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: '#111' },
-  
+
   header: { alignItems: 'center', marginTop: 16, marginBottom: 32 },
   iconBadge: {
     width: 64, height: 64, borderRadius: 32,
@@ -207,7 +213,7 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: '#0B0B0B', fontSize: 18, fontWeight: '700' },
   guarantee: { color: '#5A5A5A', fontSize: 12, marginTop: -8 },
-  
+
   restoreBtn: { padding: 8 },
   restoreText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
 
@@ -215,5 +221,3 @@ const styles = StyleSheet.create({
   legalLink: { color: '#5A5A5A', fontSize: 12 },
   legalDivider: { color: '#5A5A5A', fontSize: 12 },
 });
-
-
