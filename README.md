@@ -1,50 +1,82 @@
-# Welcome to your Expo app 👋
+# RepairMate / MendWise
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+RepairMate, currently branded in parts of the product as MendWise, is an AI-powered mobile repair assistant for diagnosing common home and car problems from a short text description and, optionally, a photo.
 
-## Get started
+The repository is an Expo + React Native application backed by Firebase and a Gemini-powered Cloud Function. It is built as a practical AI product prototype: describe what is broken, get a likely diagnosis, ask for an alternative diagnosis if the first one is wrong, then continue into step-by-step repair guidance.
 
-1. Install dependencies
+## What It Does
 
-   ```bash
-   npm install
-   ```
+- accepts natural-language repair problems from the user
+- supports optional camera or image-library uploads for visual diagnosis context
+- sends diagnosis requests to a Firebase Cloud Function using Gemini
+- returns a concise likely diagnosis
+- supports an alternative diagnosis flow when the user rejects the first answer
+- generates follow-up repair steps from the accepted diagnosis
+- handles authentication and consent gating through Firebase
+- includes usage limits and a RevenueCat-backed paywall screen
+- includes public web privacy and terms pages
 
-2. Start the app
+## Why This Project Matters
 
-   ```bash
-   npx expo start
-   ```
+This project is a portfolio proof point for AI workflow and AI product operations work, not just mobile UI work.
 
-In the output, you'll find options to open the app in a
+It demonstrates:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- prompt and system-instruction design for a bounded AI assistant
+- model-output workflows: validation, diagnosis, alternative diagnosis, repair steps, and chat
+- safety-aware user guidance for repair scenarios where bad advice could matter
+- practical integration of Gemini, Firebase Auth, Firestore, Cloud Functions, and RevenueCat
+- product thinking around onboarding, consent, usage metering, paywall behavior, and public legal pages
+- shipping a complete AI-assisted user flow with mobile and web-facing surfaces
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Core Stack
 
-## Get a fresh project
+- Expo 53
+- React Native 0.79
+- TypeScript
+- Expo Router
+- Firebase Auth
+- Firestore
+- Firebase Cloud Functions
+- Google Gemini via `@google/generative-ai`
+- RevenueCat / `react-native-purchases`
+- Expo Image Picker
 
-When you're ready, run:
+## Key Files
+
+- `app/index.tsx` - main problem intake screen with text and image input
+- `app/diagnosis.tsx` - diagnosis result and alternative diagnosis flow
+- `app/steps.tsx` - repair steps flow after a diagnosis is accepted
+- `services/geminiService.ts` - client-side AI workflow wrapper
+- `services/api.ts` - backend call wrapper and paywall/sign-in handling
+- `functions/index.js` - Firebase Cloud Function that calls Gemini
+- `constants/index.ts` - system instructions and safety/product copy
+- `app/paywall.tsx` - RevenueCat paywall screen
+- `app/consents.tsx` - consent gate
+- `web/privacy.html` and `web/terms.html` - public legal pages
+
+## Running Locally
+
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Start the Expo app:
 
-## Learn more
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Run on web:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run web
+```
 
-## Join the community
+The full AI flow requires configured Firebase, Gemini, and RevenueCat credentials. Local UI development can still be done with the Expo development server, but production diagnosis calls depend on the Firebase Cloud Function and the configured Gemini secret.
 
-Join our community of developers creating universal apps.
+## Current Status
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This is an MVP-stage AI product prototype. The repo contains the main mobile app, Firebase function, product docs, brand notes, legal pages, and setup checklists. It is intended to show practical AI workflow execution, prompt-controlled product behavior, and end-to-end product thinking around an AI assistant.
