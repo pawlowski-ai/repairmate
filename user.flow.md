@@ -1,4 +1,4 @@
-# Mendwise – User Flow (MVP)
+# MendWise – User Flow (MVP)
 
 ## Nowy użytkownik (niezalogowany)
 

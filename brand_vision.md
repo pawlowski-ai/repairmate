@@ -1,11 +1,11 @@
-# 📘 **Mendwise – Styleguide v1.0**
+# 📘 **MendWise – Styleguide v1.0**
 
 
 ## 1) Positioning & Promise
 
 **Positioning (internal):**
 
-*Mendwise is the AI guide that turns “I don’t know where to start” into “I’ve got this,” with clear diagnostics and step-by-step fixes for home and car issues.*
+*MendWise is the AI guide that turns “I don’t know where to start” into “I’ve got this,” with clear diagnostics and step-by-step fixes for home and car issues.*
 
 **Customer promise (external):**
 
@@ -62,7 +62,7 @@
 
 **One-line elevator pitch:**
 
-*Mendwise shows you what’s wrong and how to fix it—clear steps, zero jargon.*
+*MendWise shows you what’s wrong and how to fix it—clear steps, zero jargon.*
 
 **Short subhead (support line):**
 
@@ -84,7 +84,7 @@
 
 - **Slide 1:** *Fix smarter.*
     
-    *Mendwise tells you what’s wrong and how to fix it.*
+    *MendWise tells you what’s wrong and how to fix it.*
     
 - **Slide 2:** *Step by step.*
     
@@ -133,7 +133,7 @@
 ### 5.8 Paywall
 
 - **Header:** *You’ve used your 3 free fixes.*
-- **Sub:** *Unlock unlimited repairs with Mendwise Pro.*
+- **Sub:** *Unlock unlimited repairs with MendWise Pro.*
 - **CTA (primary):** *Upgrade now – $15/month*
 - **Secondary:** *Maybe later*
 
@@ -149,12 +149,12 @@
 
 ### 6.1 App Store / Google Play
 
-- **Title:** *Mendwise – AI Repair Assistant*
+- **Title:** *MendWise – AI Repair Assistant*
 - **Subtitle:** *Diagnose & fix home/car issues step by step*
 - **Promo text (80–100c):** *Fix smarter. Clear diagnosis and simple steps. Start free.*
 - **Short description:**
     
-    *Know what’s wrong and what to do. Mendwise gives you a quick diagnosis and plain-English steps. Start with 3 free AI interactions; upgrade for unlimited repairs.*
+    *Know what’s wrong and what to do. MendWise gives you a quick diagnosis and plain-English steps. Start with 3 free AI interactions; upgrade for unlimited repairs.*
     
 - **Keywords:** repair, fix, DIY, diagnose, washing machine, leak, battery, faucet, step by step, home, car, tools.
 
@@ -169,7 +169,7 @@
 
 ### 6.3 Performance ads (angles)
 
-- **Money saver:** *Stop paying for simple fixes. Try Mendwise free.*
+- **Money saver:** *Stop paying for simple fixes. Try MendWise free.*
 - **Competence boost:** *Feel capable. Fix it yourself with clear steps.*
 - **Speed:** *Diagnosis in seconds. Steps that just work.*
 
@@ -193,7 +193,7 @@
 
 ## 9) Brand Narrative (short)
 
-*Most “I’ll do it later” repairs are 30-minute wins. Mendwise gives you the courage and the know-how: fast diagnosis, clear steps, and safety nudges. You save money, learn a skill, and feel capable. That’s smarter fixing.*
+*Most “I’ll do it later” repairs are 30-minute wins. MendWise gives you the courage and the know-how: fast diagnosis, clear steps, and safety nudges. You save money, learn a skill, and feel capable. That’s smarter fixing.*
 
 ---
 
@@ -202,15 +202,15 @@
 - **Splash:** *Fix smarter. Feel capable.*
 - **Empty state:** *Nothing to fix? Start a repair when you’re ready.*
 - **Completion toast:** *Done! Nice work.*
-- **Meter tooltip:** *3 free AI interactions to try Mendwise. Upgrade anytime.*
+- **Meter tooltip:** *3 free AI interactions to try MendWise. Upgrade anytime.*
 
 ---
 
 ## 11) Notifications (optional later)
 
-- **Reminder:** *Got a dripping tap? Mendwise can walk you through it—start a repair.*
+- **Reminder:** *Got a dripping tap? MendWise can walk you through it—start a repair.*
 - **Win-back:** *Ready for your next fix? You still have 2 free interactions.*
-- **Pro nudge:** *Unlimited fixes = zero hesitation. Try Mendwise Pro.*
+- **Pro nudge:** *Unlimited fixes = zero hesitation. Try MendWise Pro.*
 
 ---
 

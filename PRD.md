@@ -1,14 +1,14 @@
-# PRD: RepairMate – AI-Powered Repair Assistant (MVP)
+# PRD: MendWise – AI-Powered Repair Assistant (MVP)
 
 ## 1. Product overview
 
 ### 1.1 Document title and version
-- PRD: RepairMate – AI-Powered Repair Assistant (MVP)
+- PRD: MendWise – AI-Powered Repair Assistant (MVP)
 - Version: 1.1
 
 ### 1.2 Product summary
 
-RepairMate is a lightweight mobile application that helps users diagnose and repair common household and automotive issues using AI. It leverages the Gemini API (via a wrapper) to provide structured repair instructions based on user-submitted text and, optionally, images.
+MendWise is a lightweight mobile application that helps users diagnose and repair common household and automotive issues using AI. It leverages the Gemini API (via a wrapper) to provide structured repair instructions based on user-submitted text and, optionally, images.
 
 This PRD outlines the requirements for the MVP version of the app, focusing strictly on essential functionality: core AI repair flow, user authentication, usage metering, and a subscription paywall. The MVP avoids extra features such as data tracking, logging, user history, or external resources. It is designed to validate user need, functionality, and monetization potential before expanding further.
 
@@ -116,7 +116,7 @@ This PRD outlines the requirements for the MVP version of the app, focusing stri
 
 ## 6. Narrative
 
-Alex is a student who finds their washing machine leaking. Not knowing where to begin, they open RepairMate, type "leaking under the door," and hit submit. The app quickly responds: it's likely a worn gasket. With one more tap, RepairMate walks Alex through each step to replace it. After three free uses, Alex upgrades — knowing this app just saved them hundreds.
+Alex is a student who finds their washing machine leaking. Not knowing where to begin, they open MendWise, type "leaking under the door," and hit submit. The app quickly responds: it's likely a worn gasket. With one more tap, MendWise walks Alex through each step to replace it. After three free uses, Alex upgrades — knowing this app just saved them hundreds.
 
 ## 7. Success metrics
 

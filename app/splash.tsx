@@ -33,7 +33,7 @@ export default function SplashScreen() {
       {/* Teksty i CTA */}
       <View style={styles.content}>
         <Text accessibilityRole="header" style={styles.headline}>SAVE CASH.{"\n"}FEEL CAPABLE.</Text>
-        <Text style={styles.subhead}>Mendwise makes you handyman.</Text>
+        <Text style={styles.subhead}>MendWise makes you handyman.</Text>
 
         <TouchableOpacity
           accessibilityRole="button"

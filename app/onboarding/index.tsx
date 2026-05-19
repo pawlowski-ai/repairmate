@@ -16,7 +16,7 @@ const STEPS = [
   {
     image: require('../../graph.assets/2.png'),
     title: "AI will find the cause",
-    subtitle: "Even if you don’t know what’s wrong, Mendwise analyzes your description or photo and tells you the most likely issue.",
+    subtitle: "Even if you don’t know what’s wrong, MendWise analyzes your description or photo and tells you the most likely issue.",
     primaryLabel: "Next",
     leftLabel: "Back",
     fullWidthCta: false,
@@ -24,7 +24,7 @@ const STEPS = [
   {
     image: require('../../graph.assets/3.png'),
     title: "Fix it yourself with simple steps",
-    subtitle: "Mendwise gives you clear, step-by-step instructions. Solve problems on your own, avoid expensive service visits, and feel confident doing it.",
+    subtitle: "MendWise gives you clear, step-by-step instructions. Solve problems on your own, avoid expensive service visits, and feel confident doing it.",
     primaryLabel: "Let's get started!",
     leftLabel: undefined,
     fullWidthCta: true,
